@@ -36,6 +36,40 @@ unsigned encrypt( uint8_t *pPlainText, unsigned plainText_len,
 //       ALL PREVIOUS CODE FROM pLab-01
 //           MUST  EXIST  HERE
 //
+    int status;
+    unsigned len = 0, encryptedLen = 0;
+
+    /* Create and initialize the context */
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+        handleErrors("encrypt: failed to create CTX");
+
+    // Initialize the encryption operation
+    status = EVP_EncryptInit_ex(ctx, ALGORITHM(), NULL, key, iv);
+    if (status != 1)
+        handleErrors("encrypt: failed to EncryptInit_ex");
+
+    // Call EncryptUpdate as many times as needed
+    // to perform regular encryption
+    status = EVP_EncryptUpdate(ctx, pCipherText, &len,pPlainText, plainText_len);
+    if (status != 1)
+        handleErrors("encrypt: failed to EncryptUpdate");
+    encryptedLen += len;
+
+    // If additional ciphertext may still be generated,
+    // the pCipherText pointer must be first advanced forward
+    pCipherText += len;
+
+    // Finalize the encryption
+    status = EVP_EncryptFinal_ex(ctx, pCipherText, &len);
+    if (status != 1)
+        handleErrors("encrypt: failed to EncryptFinal_ex");
+    encryptedLen += len;  // len could be 0 if no additional cipher text was generated
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return encryptedLen;
 
 }
 
@@ -52,6 +86,40 @@ unsigned decrypt( uint8_t *pCipherText, unsigned cipherText_len,
 //       ALL PREVIOUS CODE FROM pLab-01
 //           MUST  EXIST  HERE
 //
+    int status;
+    unsigned len = 0, decryptedLen = 0;
+
+    /* Create and initialize the context */
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+        handleErrors("decrypt: failed to create CTX");
+
+    // Initialize the decryption operation
+    status = EVP_DecryptInit_ex(ctx, ALGORITHM(), NULL, key, iv);
+    if (status != 1)
+        handleErrors("decrypt: failed to DecryptInit_ex");
+
+    // Call DecryptUpdate as many times as needed
+    // to perform regular decryption
+    status = EVP_DecryptUpdate(ctx, pDecryptedText, &len, pCipherText, cipherText_len);
+    if (status != 1)
+        handleErrors("decrypt: failed to DecryptUpdate");
+    decryptedLen += len;
+
+    // If additional decrypted text may still be generated, 
+    // the pDecryptedText pointed must be first advanced
+    pDecryptedText += len;
+
+    // Finalize the decryption
+    status = EVP_DecryptFinal_ex(ctx, pDecryptedText, &len);
+    if (status != 1)
+        handleErrors("decrypt: failed to DecryptFinal_ex");
+    decryptedLen += len;
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return decryptedLen;
 
 }
 

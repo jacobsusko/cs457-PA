@@ -5,6 +5,7 @@ FILE:   basim.c
 
 Written By: 
      1- Dr. Mohamed Aboutabl
+     2- Jacob Susko
 Submitted on: 
 ----------------------------------------------------------------------------*/
 
@@ -15,6 +16,8 @@ int main ( int argc , char * argv[] )
     //
     // Define any variable you need here
     //
+    int fd_ctrl, fd_data, fd_key, fd_iv, fd_decr;
+
     
     /* Initialise the crypto library */
     ERR_load_crypto_strings();
