@@ -20,9 +20,10 @@ int main ( int argc , char * argv[] )
     unsigned key_len = 32; // ie 256 bits
     unsigned iv_len = 16; // ie 128 bits
     uint8_t ciphertext[CIPHER_LEN_MAX];
+    uint8_t plaintext[PLAINTEXT_LEN_MAX];
     unsigned plaintext_len, ciphertext_len;
 
-    int fd_ctrl, fd_data, fd_key, fd_iv, fd_decr;
+    int fd_ctrl, fd_data, fd_key, fd_iv, fd_plain;
 
     
     /* Initialise the crypto library */
@@ -34,40 +35,58 @@ int main ( int argc , char * argv[] )
         printf("Amal is missing command-line arguments. Usage: %s <ctrlFD> <dataFD>\n" , argv[0]) ;
         exit(-1) ;
     }
-    fd_ctrl = atoi( argv[1] ) ;
-    fd_data = atoi( argv[2] ) ;
+    fd_ctrl = atoi( argv[1] ) ; /* A - B Control Channel */
+    fd_data = atoi( argv[2] ) ; /* A - B Data Channel */
 
+    /* Open clean Log File */
     FILE *log = fopen("amal/logAmal.txt" , "w" );
     if ( ! log )
         { fprintf( stderr , "This is Amal. Could not create log file\n"); exit(-1) ; }
     fprintf( log , "This is Amal. Will write encrypted data to FD %d\n" , fd_data );
                    
-    // Get the session symmetric key
+    /* Open key file */
     fd_key = open("key.bin" , O_RDONLY)  ;
     if ( fd_key == -1 )
         { fprintf( log , "\nCould not open Amal's key.bin\n"); exit(-1) ;}
 
+    /* Dump Key into log file */
     read ( fd_key , key, key_len) ;
     fprintf( log, "\nUsing this symmetric key of length %d bytes\n" , key_len );
     BIO_dump_fp ( log, (const char *) key, key_len );
     close( fd_key ) ;
 
-    // Get the session Initial Vector 
+    /* Open IV file */ 
     fd_iv = open( "iv.bin" , O_RDONLY )  ;
     if ( fd_iv == -1 )
         { fprintf( log, "\nCould not open Amal's iv.bin\n"); exit(-1); }
     
+    /* Dump IV into log file */
     read ( fd_iv, iv, iv_len);
     fprintf( log, "\nUsing this Initial Vector of Length %d bytes\n", iv_len);
     BIO_dump_fp(log, (const char *) iv, iv_len);
     close( fd_iv ) ;
 
-    /* Encrypt plain text */
+    /* Open symbolic link */
+    fd_plain = open( "../bunny.mp4", O_RDONLY);
+    if ( fd_plain == -1)
+        { fprintf(log, "\nCould not open bunny.mp4 symbolic link\n"); exit(-1); }
+    
+    plaintext_len = read(fd_plain, plaintext, sizeof(plaintext));
+    if (plaintext_len = -1)
+        { fprintf(log, "\nFailed to read from bunny.mp4\n"); close(fd_plain); exit(-1); }
+
+
+    /* Encrypt plain text */ 
+    ciphertext_len = encrypt(plaintext, plaintext_len, key, iv, ciphertext);
+
+    /* Send ciphertext to file decriptor of A-B Data (fd_data) */
+    write(fd_data, ciphertext, ciphertext_len);
 
     /* Clean up */
-    //
-    // ... 
-    //
+    close(fd_plain);
+    fclose(log);
+    EVP_cleanup();
+    ERR_free_strings();
     
 }
 
