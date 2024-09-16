@@ -21,6 +21,7 @@ int main ( int argc , char * argv[] )
     unsigned iv_len = 16; // ie 128 bits
     unsigned ciphertext_len, decryptedtext_len;
     int fd_ctrl, fd_data, fd_key, fd_iv, fd_decr;
+    uint8_t ciphertext[CIPHER_LEN_MAX], decryptedtext[PLAINTEXT_LEN_MAX];
 
     
     /* Initialise the crypto library */
@@ -32,15 +33,16 @@ int main ( int argc , char * argv[] )
         printf("Basim is missing command-line arguments. Usage: %s <ctrlFD> <dataFD>\n" , argv[0]) ;
         exit(-1) ;
     }
-    fd_ctrl = atoi( argv[1] ) ;
-    fd_data = atoi( argv[2] ) ;
+    fd_ctrl = atoi( argv[1] ) ; /* File Descriptor for A - B Control Channel */
+    fd_data = atoi( argv[2] ) ; /* File Descriptor for A - B Data Channel */
 
+    /* Open Clean Log File */
     FILE *log = fopen("basim/logBasim.txt" , "w" );
     if ( ! log )
         { fprintf( stderr , "This is Basim. Could not create log file\n"); exit(-1) ; }
     fprintf( log , "This is Basim. Will read encrypted data from FD %d\n" , fd_data );
                    
-    // Get the session symmetric key
+    /* Open Key File */
     fd_key = open("key.bin" , O_RDONLY)  ;
     if ( fd_key == -1 )
         { fprintf( log , "\nCould not open Basim's key.bin\n"); exit(-1) ;}
@@ -50,7 +52,7 @@ int main ( int argc , char * argv[] )
     BIO_dump_fp ( log, (const char *) key, key_len );
     close( fd_key ) ;
 
-    // Get the session Initial Vector 
+    /* Open IV File */
     fd_iv = open( "iv.bin" , O_RDONLY )  ;
     if ( fd_iv == -1 )
         { fprintf( log, "\nCould not open Basim's iv.bin\n"); exit(-1); }
@@ -60,21 +62,30 @@ int main ( int argc , char * argv[] )
     BIO_dump_fp(log, (const char *) iv, iv_len);
     close( fd_iv ) ;
 
-    // Open the file for the output decrypted file ***************************************
-    fd_decr = open( decrypted , /* .. */  , /* .. */ );
-    if( fd_decr == -1 )
-        { fprintf( log , "\nCould not open '%s'\n" , decrypted ); exit(-1) ; }
-   
-	fflush( log ) ;
-	
-   /* Finally, decrypt the ciphertext file */
-    decryptFile( /* .. */ );
+    /* Create empty pa-01/bunny.decr output file */
+    FILE *output = fopen("pa-01/bunny.decr", "w");
+    if (!output)
+        { fprintf(stderr, "This is Basim. Could not create bunny.decr file\n"); exit(-1); }
+
+    /* open and read in what received via */
+    ciphertext_len = read(fd_data, ciphertext, ciphertext_len);
+    if (ciphertext_len = -1)
+    { 
+        fprintf(log, "\nFailed to read from fd_data\n"); 
+        close(fd_data); 
+        close(output);
+        exit(-1); 
+    }
+
+    /* Decrypt file recieved via fd_data and write results to output*/
+    decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
+    write(output, decryptedtext, decryptedtext_len);
 
     /* Clean up */
-    //
-    // ... 
-    //
-    
+    close(fd_data);
+    close(output);
+    EVP_cleanup();
+    ERR_free_strings();
 }
 
 
