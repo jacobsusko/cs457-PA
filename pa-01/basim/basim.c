@@ -78,8 +78,8 @@ int main ( int argc , char * argv[] )
     }
 
     /* Decrypt file recieved via fd_data and write results to output*/
-    decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
-    write(output, decryptedtext, decryptedtext_len);
+    decryptedtext_len = decryptFile(fd_data, output, key, iv);
+    // error check ***********************************************************
 
     /* Clean up */
     close(fd_data);

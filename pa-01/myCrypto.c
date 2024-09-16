@@ -138,7 +138,24 @@ static unsigned char   plaintext [ PLAINTEXT_LEN_MAX ] , // Temporarily store pl
 
 int encryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
 {
-    
+    int bytes_read, cipherText_len, total_cipherText_len;
+
+    while ((bytes_read = read(fd_in, plaintext, PLAINTEXT_LEN_MAX)) > 0)
+    {
+        cipherText_len = encrypt(plaintext, PLAINTEXT_LEN_MAX, key, iv, ciphertext);
+
+        if (write(fd_out, ciphertext, cipherText_len) != cipherText_len)
+        {
+            perrorf("This is Amal. Failed to write cipherText to %s", fd_out);
+            return -1;
+        }
+        total_cipherText_len += cipherText_len;
+    }
+
+    if (bytes_read < 0)
+        { perrorf("THis is Amal. Failed to read from %s", fd_in); return -1; }
+
+    return total_cipherText_len;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,5 +163,22 @@ int encryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
 
 int decryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
 {
+    int bytes_read, decryptedText_len, total_decryptedText_len;
 
+    while ((bytes_read = read(fd_in, ciphertext, CIPHER_LEN_MAX)) > 0)
+    {
+        decryptedText_len = decrypt(ciphertext, CIPHER_LEN_MAX, key, iv, decryptext);
+
+        if (write(fd_out, decryptext, decryptedText_len) != decryptedText_len) 
+        {
+            perrorf("This is Basim. Failed to write decryptedText to %s", fd_out);
+            return -1;
+        }
+        total_decryptedText_len += decryptedText_len;
+    }
+
+    if (bytes_read < 0)
+        { perrorf("This is Basim. Failed to read from %s", fd_in); return -1; }
+
+    return total_decryptedText_len;
 }

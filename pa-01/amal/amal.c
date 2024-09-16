@@ -77,10 +77,9 @@ int main ( int argc , char * argv[] )
 
 
     /* Encrypt plain text */ 
-    ciphertext_len = encrypt(plaintext, plaintext_len, key, iv, ciphertext);
-
-    /* Send ciphertext to file decriptor of A-B Data (fd_data) */
-    write(fd_data, ciphertext, ciphertext_len);
+    int ciphtertext_len;
+    ciphertext_len  = encryptFile(fd_plain, fd_data, key, iv);
+    // error check *************************************************************
 
     /* Clean up */
     close(fd_plain);
