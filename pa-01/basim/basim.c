@@ -66,7 +66,6 @@ int main ( int argc , char * argv[] )
     int output = open("bunny.decr", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (output == -1)
         { fprintf(stderr, "This is Basim. Could not create bunny.decr file\n"); exit(-1); }
-    fprintf( log, "\nCreated bunny.decr at FD %d\n", output);
 
     fflush(log);
     /* Decrypt file recieved via fd_data and write results to output*/

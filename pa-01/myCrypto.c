@@ -136,49 +136,170 @@ static unsigned char   plaintext [ PLAINTEXT_LEN_MAX ] , // Temporarily store pl
 
 //-----------------------------------------------------------------------------
 
-int encryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
+int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
 {
-    int bytes_read, cipherText_len, total_cipherText_len;
+    int bytes_read, cipherText_len, total_cipherText_len = 0;
+    unsigned char final_block[PLAINTEXT_LEN_MAX];  // Buffer for final block encryption
+    int last_block_len = 0;
 
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+        handleErrors("encryptFile: failed to create CTX");
+
+    // Initialize the encryption operation
+    if (1 != EVP_EncryptInit_ex(ctx, ALGORITHM(), NULL, key, iv))
+        handleErrors("encryptFile: failed to EncryptInit_ex");
+
+    // Read and encrypt all but the last chunk
     while ((bytes_read = read(fd_in, plaintext, PLAINTEXT_LEN_MAX)) > 0)
     {
-        cipherText_len = encrypt(plaintext, PLAINTEXT_LEN_MAX, key, iv, ciphertext);
+        // Buffer the last block
+        if (bytes_read < PLAINTEXT_LEN_MAX)
+        {
+            memcpy(final_block, plaintext, bytes_read);
+            last_block_len = bytes_read;
+            break;  // This is the last block, break the loop
+        }
+
+        cipherText_len = 0;
+        if (1 != EVP_EncryptUpdate(ctx, ciphertext, &cipherText_len, plaintext, bytes_read))
+            handleErrors("encryptFile: failed to EncryptUpdate");
 
         if (write(fd_out, ciphertext, cipherText_len) != cipherText_len)
         {
             printf("This is Amal. Failed to write cipherText to %d", fd_out);
+            EVP_CIPHER_CTX_free(ctx);
             return -1;
         }
+
         total_cipherText_len += cipherText_len;
     }
 
+    // Handle any errors reading from input file
     if (bytes_read < 0)
-        { printf("This is Amal. Failed to read from %d", fd_in); return -1; }
+    {
+        printf("This is Amal. Failed to read from %d", fd_in);
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
 
+    // Encrypt the final block and apply padding
+    if (last_block_len > 0)
+    {
+        cipherText_len = 0;
+        if (1 != EVP_EncryptUpdate(ctx, ciphertext, &cipherText_len, final_block, last_block_len))
+            handleErrors("encryptFile: failed to EncryptUpdate (final block)");
+
+        total_cipherText_len += cipherText_len;
+        if (write(fd_out, ciphertext, cipherText_len) != cipherText_len)
+        {
+            printf("This is Amal. Failed to write final cipherText to %d", fd_out);
+            EVP_CIPHER_CTX_free(ctx);
+            return -1;
+        }
+    }
+
+    // Finalize encryption (handles padding for the last block)
+    cipherText_len = 0;
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext, &cipherText_len))
+        handleErrors("encryptFile: failed to EncryptFinal_ex");
+
+    total_cipherText_len += cipherText_len;
+    if (write(fd_out, ciphertext, cipherText_len) != cipherText_len)
+    {
+        printf("This is Amal. Failed to write final padded cipherText to %d", fd_out);
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
     return total_cipherText_len;
 }
+
 
 //-----------------------------------------------------------------------------
 
 
-int decryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
+int decryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
 {
-    int bytes_read, decryptedText_len, total_decryptedText_len;
+    int bytes_read, decryptedLen, total_decryptedLen = 0;
+    unsigned char final_block[PLAINTEXT_LEN_MAX]; // Buffer for the final block
+    int final_block_len = 0;
 
-    while ((bytes_read = read(fd_in, ciphertext, CIPHER_LEN_MAX)) > 0)
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+        handleErrors("decryptFile: failed to create CTX");
+
+    // Initialize the decryption operation
+    if (1 != EVP_DecryptInit_ex(ctx, ALGORITHM(), NULL, key, iv))
+        handleErrors("decryptFile: failed to DecryptInit_ex");
+
+    // Read and decrypt all but the last chunk
+    while ((bytes_read = read(fd_in, ciphertext, PLAINTEXT_LEN_MAX)) > 0)
     {
-        decryptedText_len = decrypt(ciphertext, CIPHER_LEN_MAX, key, iv, decryptext);
-
-        if (write(fd_out, decryptext, decryptedText_len) != decryptedText_len) 
+        if (bytes_read < PLAINTEXT_LEN_MAX)
         {
-            printf("This is Basim. Failed to write decryptedText to %d", fd_out);
+            // If the read is less than buffer size, it's the final block
+            memcpy(final_block, ciphertext, bytes_read);
+            final_block_len = bytes_read;
+            break;  // Exit loop as this is the last block
+        }
+
+        decryptedLen = 0;
+        if (1 != EVP_DecryptUpdate(ctx, decryptext, &decryptedLen, ciphertext, bytes_read))
+            handleErrors("decryptFile: failed to DecryptUpdate");
+
+        if (write(fd_out, decryptext, decryptedLen) != decryptedLen)
+        {
+            printf("This is Amal. Failed to write decrypted text to %d", fd_out);
+            EVP_CIPHER_CTX_free(ctx);
             return -1;
         }
-        total_decryptedText_len += decryptedText_len;
+
+        total_decryptedLen += decryptedLen;
     }
 
+    // Handle any errors reading from the input file
     if (bytes_read < 0)
-        { printf("This is Basim. Failed to read from %d", fd_in); return -1; }
+    {
+        printf("This is Amal. Failed to read from %d", fd_in);
+        EVP_CIPHER_CTX_free(ctx);
+        return -1;
+    }
 
-    return total_decryptedText_len;
+    // Decrypt the final block and remove padding
+    if (final_block_len > 0)
+    {
+        decryptedLen = 0;
+        if (1 != EVP_DecryptUpdate(ctx, decryptext, &decryptedLen, final_block, final_block_len))
+            handleErrors("decryptFile: failed to DecryptUpdate (final block)");
+
+        total_decryptedLen += decryptedLen;
+        if (write(fd_out, decryptext, decryptedLen) != decryptedLen)
+        {
+            printf("This is Amal. Failed to write final decrypted text to %d", fd_out);
+            EVP_CIPHER_CTX_free(ctx);
+            return -1;
+        }
+    }
+
+    // Finalize decryption (handles padding removal for the last block)
+    decryptedLen = 0;
+    if (1 != EVP_DecryptFinal_ex(ctx, decryptext, &decryptedLen))
+        handleErrors("decryptFile: failed to DecryptFinal_ex");
+
+    if (decryptedLen > 0)
+    {
+        total_decryptedLen += decryptedLen;
+        if (write(fd_out, decryptext, decryptedLen) != decryptedLen)
+        {
+            printf("This is Amal. Failed to write final decrypted text to %d", fd_out);
+            EVP_CIPHER_CTX_free(ctx);
+            return -1;
+        }
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    return total_decryptedLen;
 }
+

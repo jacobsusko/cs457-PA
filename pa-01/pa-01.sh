@@ -40,10 +40,10 @@ ln -s ../iv.bin basim/iv.bin
 ./dispatcher
 
 # Display the log files of each process
-echo " Displaying Amal log:"
+echo "Displaying Amal log:"
 cat amal/logAmal.txt
 
-echo "DIsplaying Basim log:"
+echo "Displaying Basim log:"
 cat basim/logBasim.txt
 
 # echo "Displaying Dispatcher log:"

@@ -19,8 +19,6 @@ int main ( int argc , char * argv[] )
     uint8_t key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
     unsigned key_len = 32; // ie 256 bits
     unsigned iv_len = 16; // ie 128 bits
-    uint8_t ciphertext[CIPHER_LEN_MAX];
-    uint8_t plaintext[PLAINTEXT_LEN_MAX];
     unsigned plaintext_len, ciphertext_len;
 
     int fd_ctrl, fd_data, fd_key, fd_iv, fd_plain;
@@ -68,7 +66,7 @@ int main ( int argc , char * argv[] )
 
 
     /* Open symbolic link */
-    fd_plain = open( "../bunny.mp4", O_RDONLY);
+    fd_plain = open( "bunny.mp4", O_RDONLY);
     if ( fd_plain == -1)
         { fprintf(log, "\nCould not open bunny.mp4 symbolic link\n"); exit(-1); }
 
