@@ -74,7 +74,6 @@ int main ( int argc , char * argv[] )
     /* Encrypt plain text */ 
     int ciphtertext_len;
     ciphertext_len  = encryptFile(fd_plain, fd_data, key, iv);
-    // error check *************************************************************
 
     /* Clean up */
     close(fd_plain);

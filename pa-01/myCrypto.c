@@ -139,7 +139,7 @@ static unsigned char   plaintext [ PLAINTEXT_LEN_MAX ] , // Temporarily store pl
 int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
 {
     int bytes_read, cipherText_len, total_cipherText_len = 0;
-    unsigned char final_block[PLAINTEXT_LEN_MAX];  // Buffer for final block encryption
+    unsigned char final_block[PLAINTEXT_LEN_MAX]; 
     int last_block_len = 0;
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -150,15 +150,14 @@ int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
     if (1 != EVP_EncryptInit_ex(ctx, ALGORITHM(), NULL, key, iv))
         handleErrors("encryptFile: failed to EncryptInit_ex");
 
-    // Read and encrypt all but the last chunk
+
     while ((bytes_read = read(fd_in, plaintext, PLAINTEXT_LEN_MAX)) > 0)
     {
-        // Buffer the last block
         if (bytes_read < PLAINTEXT_LEN_MAX)
         {
             memcpy(final_block, plaintext, bytes_read);
             last_block_len = bytes_read;
-            break;  // This is the last block, break the loop
+            break;
         }
 
         cipherText_len = 0;
@@ -175,7 +174,6 @@ int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
         total_cipherText_len += cipherText_len;
     }
 
-    // Handle any errors reading from input file
     if (bytes_read < 0)
     {
         printf("This is Amal. Failed to read from %d", fd_in);
@@ -223,7 +221,7 @@ int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
 int decryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
 {
     int bytes_read, decryptedLen, total_decryptedLen = 0;
-    unsigned char final_block[PLAINTEXT_LEN_MAX]; // Buffer for the final block
+    unsigned char final_block[PLAINTEXT_LEN_MAX];
     int final_block_len = 0;
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -239,10 +237,9 @@ int decryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
     {
         if (bytes_read < PLAINTEXT_LEN_MAX)
         {
-            // If the read is less than buffer size, it's the final block
             memcpy(final_block, ciphertext, bytes_read);
             final_block_len = bytes_read;
-            break;  // Exit loop as this is the last block
+            break;
         }
 
         decryptedLen = 0;
@@ -259,7 +256,6 @@ int decryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv)
         total_decryptedLen += decryptedLen;
     }
 
-    // Handle any errors reading from the input file
     if (bytes_read < 0)
     {
         printf("This is Amal. Failed to read from %d", fd_in);
