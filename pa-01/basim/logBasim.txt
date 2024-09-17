@@ -1,8 +1,8 @@
 This is Basim. Will read encrypted data from FD 5
 
 Using this symmetric key of length 32 bytes
-0000 - 08 75 12 b8 34 e8 5a 8c-2d 4a f8 91 8a b7 8e cb   .u..4.Z.-J......
-0010 - 05 49 84 2b 4b 34 c3 aa-39 cb f8 e1 ac 73 2a 1b   .I.+K4..9....s*.
+0000 - bb e8 7c e9 18 ed f3 1b-2d c5 a4 7c c5 97 4c 36   ..|.....-..|..L6
+0010 - da 18 5f fa 2b d4 81 55-78 80 90 b4 e4 3d 9a e5   .._.+..Ux....=..
 
 Using this Initial Vector of Length 16 bytes
-0000 - 3c c5 4c e1 a7 43 c5 14-38 00 5b f7 83 21 12 c9   <.L..C..8.[..!..
+0000 - af 6e 16 d4 9a f0 f6 98-33 81 26 f4 31 6c 36 5a   .n......3.&.1l6Z

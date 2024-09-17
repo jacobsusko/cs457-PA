@@ -11,6 +11,10 @@ Submitted on:
 
 #include "../myCrypto.h"
 
+// Declarations of functions to be used
+int decryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv);
+
+
 int main ( int argc , char * argv[] )
 {
     //
@@ -43,7 +47,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "This is Basim. Will read encrypted data from FD %d\n" , fd_data );
                    
     /* Open Key File */
-    fd_key = open("key.bin" , O_RDONLY)  ;
+    fd_key = open("basim/key.bin" , O_RDONLY)  ;
     if ( fd_key == -1 )
         { fprintf( log , "\nCould not open Basim's key.bin\n"); exit(-1) ;}
 
@@ -53,7 +57,7 @@ int main ( int argc , char * argv[] )
     close( fd_key ) ;
 
     /* Open IV File */
-    fd_iv = open( "iv.bin" , O_RDONLY )  ;
+    fd_iv = open( "basim/iv.bin" , O_RDONLY )  ;
     if ( fd_iv == -1 )
         { fprintf( log, "\nCould not open Basim's iv.bin\n"); exit(-1); }
     

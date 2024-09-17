@@ -11,6 +11,10 @@ Submitted on:
 
 #include "../myCrypto.h"
 
+// Declaration of Functions to be used
+int encryptFile(int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv);
+
+
 int main ( int argc , char * argv[] )
 {
     //
@@ -43,7 +47,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "This is Amal. Will write encrypted data to FD %d\n" , fd_data );
                    
     /* Open key file */
-    fd_key = open("key.bin" , O_RDONLY)  ;
+    fd_key = open("amal/key.bin" , O_RDONLY)  ;
     if ( fd_key == -1 )
         { fprintf( log , "\nCould not open Amal's key.bin\n"); exit(-1) ;}
 
@@ -54,7 +58,7 @@ int main ( int argc , char * argv[] )
     close( fd_key ) ;
 
     /* Open IV file */ 
-    fd_iv = open( "iv.bin" , O_RDONLY )  ;
+    fd_iv = open( "amal/iv.bin" , O_RDONLY )  ;
     if ( fd_iv == -1 )
         { fprintf( log, "\nCould not open Amal's iv.bin\n"); exit(-1); }
     
