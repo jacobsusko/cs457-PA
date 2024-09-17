@@ -72,6 +72,7 @@ int main ( int argc , char * argv[] )
     if ( fd_plain == -1)
         { fprintf(log, "\nCould not open bunny.mp4 symbolic link\n"); exit(-1); }
 
+    fflush(log);
     /* Encrypt plain text */ 
     int ciphtertext_len;
     ciphertext_len  = encryptFile(fd_plain, fd_data, key, iv);

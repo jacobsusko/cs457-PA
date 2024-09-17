@@ -1,0 +1,10 @@
+This is Basim. Will read encrypted data from FD 5
+
+Using this symmetric key of length 32 bytes
+0000 - 61 a9 62 91 3f dc 43 10-d4 07 84 a9 91 42 8d 0b   a.b.?.C......B..
+0010 - 4c ea bd 6f 4a 94 8c eb-d9 f5 7c 69 09 44 a1 97   L..oJ.....|i.D..
+
+Using this Initial Vector of Length 16 bytes
+0000 - b2 71 b2 87 e2 87 44 43-6f 7d 23 07 08 7f 96 85   .q....DCo}#.....
+
+Created bunny.decr
