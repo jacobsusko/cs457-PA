@@ -70,7 +70,6 @@ int main ( int argc , char * argv[] )
     fflush(log);
     /* Decrypt file recieved via fd_data and write results to output*/
     decryptedtext_len = decryptFile(fd_data, output, key, iv);
-    // error check ***********************************************************
 
     /* Clean up */
     close(fd_data);
