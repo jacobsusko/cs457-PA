@@ -153,7 +153,7 @@ int encryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
     }
 
     if (bytes_read < 0)
-        { printf("THis is Amal. Failed to read from %d", fd_in); return -1; }
+        { printf("This is Amal. Failed to read from %d", fd_in); return -1; }
 
     return total_cipherText_len;
 }
