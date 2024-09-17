@@ -146,14 +146,14 @@ int encryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
 
         if (write(fd_out, ciphertext, cipherText_len) != cipherText_len)
         {
-            perrorf("This is Amal. Failed to write cipherText to %s", fd_out);
+            printf("This is Amal. Failed to write cipherText to %d", fd_out);
             return -1;
         }
         total_cipherText_len += cipherText_len;
     }
 
     if (bytes_read < 0)
-        { perrorf("THis is Amal. Failed to read from %s", fd_in); return -1; }
+        { printf("THis is Amal. Failed to read from %d", fd_in); return -1; }
 
     return total_cipherText_len;
 }
@@ -171,14 +171,14 @@ int decryptFile( int fd_in, int fd_out, const uint8_t *key, const uint8_t *iv )
 
         if (write(fd_out, decryptext, decryptedText_len) != decryptedText_len) 
         {
-            perrorf("This is Basim. Failed to write decryptedText to %s", fd_out);
+            printf("This is Basim. Failed to write decryptedText to %d", fd_out);
             return -1;
         }
         total_decryptedText_len += decryptedText_len;
     }
 
     if (bytes_read < 0)
-        { perrorf("This is Basim. Failed to read from %s", fd_in); return -1; }
+        { printf("This is Basim. Failed to read from %d", fd_in); return -1; }
 
     return total_decryptedText_len;
 }

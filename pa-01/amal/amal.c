@@ -66,15 +66,11 @@ int main ( int argc , char * argv[] )
     BIO_dump_fp(log, (const char *) iv, iv_len);
     close( fd_iv ) ;
 
+
     /* Open symbolic link */
     fd_plain = open( "../bunny.mp4", O_RDONLY);
     if ( fd_plain == -1)
         { fprintf(log, "\nCould not open bunny.mp4 symbolic link\n"); exit(-1); }
-    
-    plaintext_len = read(fd_plain, plaintext, sizeof(plaintext));
-    if (plaintext_len = -1)
-        { fprintf(log, "\nFailed to read from bunny.mp4\n"); close(fd_plain); exit(-1); }
-
 
     /* Encrypt plain text */ 
     int ciphtertext_len;

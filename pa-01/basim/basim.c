@@ -63,19 +63,20 @@ int main ( int argc , char * argv[] )
     close( fd_iv ) ;
 
     /* Create empty pa-01/bunny.decr output file */
-    FILE *output = fopen("pa-01/bunny.decr", "w");
+    int output = open("pa-01/bunny.decr", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (!output)
         { fprintf(stderr, "This is Basim. Could not create bunny.decr file\n"); exit(-1); }
+    fprintf( log, "\nCreated bunny.decr\n");
 
     /* open and read in what received via */
-    ciphertext_len = read(fd_data, ciphertext, ciphertext_len);
-    if (ciphertext_len = -1)
-    { 
-        fprintf(log, "\nFailed to read from fd_data\n"); 
-        close(fd_data); 
-        close(output);
-        exit(-1); 
-    }
+    // ciphertext_len = read(fd_data, ciphertext, ciphertext_len);
+    // if (ciphertext_len = -1)
+    // { 
+    //     fprintf(log, "\nFailed to read from fd_data\n"); 
+    //     close(fd_data); 
+    //     close(output);
+    //     exit(-1); 
+    // }
 
     /* Decrypt file recieved via fd_data and write results to output*/
     decryptedtext_len = decryptFile(fd_data, output, key, iv);
@@ -84,6 +85,7 @@ int main ( int argc , char * argv[] )
     /* Clean up */
     close(fd_data);
     close(output);
+    fclose(log);
     EVP_cleanup();
     ERR_free_strings();
 }
