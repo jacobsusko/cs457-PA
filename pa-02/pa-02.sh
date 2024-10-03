@@ -14,7 +14,7 @@ ln -s  ../bunny.mp4       bunny.mp4
 
 echo "=============================="
 echo "Compiling all source"
-	gcc amal/amal.c    myCrypto.c   -o amal/amal    -lcrypto
+	# gcc amal/amal.c    myCrypto.c   -o amal/amal    -lcrypto
 	gcc basim/basim.c  myCrypto.c   -o basim/basim  -lcrypto
 	gcc wrappers.c     dispatcher.c -o dispatcher
 

@@ -1,0 +1,29 @@
+
+This is Basim's Jacob Susko & Sydney Nguyen
+
+Basim: I will receive digest from FD 3 and file from FD 5
+Basim: Starting to receive incoming file and compute its digest
+
+Basim: Here is locally-computed the digest of the incoming file:
+
+Basim: I received the following signature from Amal:
+0000 - b6 7c 04 7e 62 cc 0d ab-4b e2 8b 83 59 04 12 a0   .|.~b...K...Y...
+0010 - 76 94 45 f5 53 e7 84 66-ae 0d 17 f2 4c 1a 8e 85   v.E.S..f....L...
+0020 - 8c 48 fc cd a6 1a d3 0b-0d cc 86 0f 2d 9d f9 f4   .H..........-...
+0030 - 3e eb 57 26 ba 29 4f 74-31 58 84 4e 0f e1 cf dd   >.W&.)Ot1X.N....
+0040 - 5b 60 c1 6d 2c b0 90 00-ed b3 63 5f c5 31 71 09   [`.m,.....c_.1q.
+0050 - b5 51 fd 99 c1 b6 17 cb-3d ad 85 28 12 d1 9d 09   .Q......=..(....
+0060 - 7f ce 72 b5 20 22 8a c6-97 cf 31 1e 81 7f 66 e3   ..r. "....1...f.
+0070 - 35 a9 5d e4 5a 6c bd ba-90 35 3b 91 d3 64 12 81   5.].Zl...5;..d..
+0080 - 78 9e 98 74 8e 2b 92 f3-eb 15 9c 38 32 c1 e1 e3   x..t.+.....82...
+0090 - a6 37 5b b9 c3 a7 49 f2-06 12 84 26 be 22 6b 69   .7[...I....&."ki
+00a0 - d5 99 60 fa ce 0a e0 cc-05 b9 60 63 c5 0a f2 f6   ..`.......`c....
+00b0 - a8 64 a4 fc 7c 61 69 bd-68 53 59 7d 08 2e 33 7e   .d..|ai.hSY}..3~
+00c0 - 48 a6 34 04 1d a1 6b 2e-91 25 3e 49 35 8e e6 42   H.4...k..%>I5..B
+00d0 - 03 d9 e8 3c e0 fc a7 7d-f8 10 6a ff bd 3c cb 09   ...<...}..j..<..
+00e0 - ad 11 15 20 17 70 c4 b8-71 27 46 9f bc 55 e4 d3   ... .p..q'F..U..
+00f0 - 0c 82 48 fb 07 fb 27 3a-7b 7c 41 7c 1c cf a6 a3   ..H...':{|A|....
+
+Basim: I found that Amal's signature is 
+0
+INVALID

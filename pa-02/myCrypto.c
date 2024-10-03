@@ -5,7 +5,7 @@ FILE:   myCrypto.c
 
 Written By:  Team # 8
      1- Jacob Susko
-     2- Sydney 
+     2- Sydney Nguyen
 
 Submitted on: 
 ----------------------------------------------------------------------------*/
@@ -24,13 +24,41 @@ void handleErrors( char *msg)
 }
 
 
-/*
+//***********************************************************************
+// pLAB-01
+//***********************************************************************
 
-    Y O U R       P R E V I O U S      C O D E 
 
-            G O E S        H E R E
 
-*/
+//***********************************************************************
+// PA-01
+//***********************************************************************
+
+
+
+//***********************************************************************
+// pLAB-02
+//***********************************************************************
+
+EVP_PKEY *getRSAfromFile(char * filename, int public)
+{
+    FILE * fp = fopen(filename,"rb");
+    if (fp == NULL)
+    {
+        fprintf( stderr , "getRSAfromFile: Unable to open RSA key file %s \n",filename);
+        return NULL;    
+    }
+
+    EVP_PKEY *key = EVP_PKEY_new() ;
+    if ( public )
+        key = PEM_read_PUBKEY( fp, &key , NULL , NULL );
+    else
+        key = PEM_read_PrivateKey( fp , &key , NULL , NULL );
+ 
+    fclose( fp );
+
+    return key;
+}
 
 //***********************************************************************
 // PA-02
@@ -58,9 +86,6 @@ int privKeySign( uint8_t **sig , size_t *sigLen , EVP_PKEY  *privKey ,
 
     if (EVP_PKEY_sign_init(ctx) <= 0)
         { printf("\nUnable to initialize context for private key\n"); exit(-1); }
-    
-    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
-        { printf("\nUnable to set the PADDING mode of the context for private key\n"); exit(-1); }
 
     // Determine how big the size of the signature could be
     size_t cipherLen ; 
@@ -72,7 +97,7 @@ int privKeySign( uint8_t **sig , size_t *sigLen , EVP_PKEY  *privKey ,
         { printf("\nInsufficient memory to Sign\n"); exit(-1); }
 
     // Now, actually sign the inData using EVP_PKEY_sign( )
-    if (EVP_PKEY_sign(ctx, sig, &cipherLen, inData, inLen) <= 0)
+    if (EVP_PKEY_sign(ctx, *sig, &cipherLen, inData, inLen) <= 0)
         { printf("\nSignature of the data failed\n"); exit(-1); }
 
     // All is good
@@ -104,16 +129,11 @@ int pubKeyVerify( uint8_t *sig , size_t sigLen , EVP_PKEY  *pubKey
         { printf("\nUnable to create a new context of public key\n"); exit(-1); }
 
     if (EVP_PKEY_verify_init(ctx) <= 0)
-        { pritnf("\nUnable to initialize the context for signature verification\n"); exit(-1); }
-
-    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
-        { printf("\nUnable to set the PADDING mode of the context for signature verification\n"); exit(-1); }
+        { printf("\nUnable to initialize the context for signature verification\n"); exit(-1); }
 
     // Verify the signature vs the incoming data using this context
     int decision = EVP_PKEY_verify(ctx, sig, sigLen, data, dataLen) ;
-
     //  free any dynamically-allocated objects
-    free(sig);
     EVP_PKEY_CTX_free( ctx );
 
     return decision ;
@@ -131,28 +151,37 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
 {
     EVP_MD_CTX *mdCtx ;
     size_t nBytes ;
-    unsigned int  mdLen ;
+    unsigned int  mdLen, bytes_read ;
+    unsigned char buffer[ HASH_LEN ];
 
 	// Use EVP_MD_CTX_create() to create new hashing context    
-    // EVP_MD_CTX_new()
-    
+    mdCtx = EVP_MD_CTX_new();
+    if (!mdCtx)
+        { printf("\nFailed to create new hashing context\n"); exit(-1); }
+
     // Initialize the context using EVP_DigestInit() so that it deploys 
 	// the HASH_ALGORITHM() hashing function 
-    // EVP_DigestInit(  )
+    if (EVP_DigestInit(mdCtx, HASH_ALGORITHM()) <=0 )
+        { printf("\nFailed to initalize hash function\n"); exit(-1); }
 
+    mdLen = 0;
     while ( 1 )   // Loop until end-of input file
     {
         // Read a chund of input from fd_in. Exit the loop when End-of-File is reached
+        if (bytes_read = read(fd_in, buffer, HASH_LEN) <= 0)
+            break;
 
-        // VP_DigestUpdate( )
+        EVP_DigestUpdate( mdCtx, buffer, bytes_read);
         
         // if ( fd_out > 0 ) send the above chunk of data to fd_out
-            
+        if (fd_out > 0)
+        { write(fd_out, buffer, bytes_read); }
+        mdLen += bytes_read;    
     }
 
-    // EVP_DigestFinal( )
+    EVP_DigestFinal( mdCtx, digest, &bytes_read);
     
-    // EVP_MD_CTX_destroy( );
+    EVP_MD_CTX_free( mdCtx);
 
     return mdLen ;
 }
