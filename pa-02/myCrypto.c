@@ -3,9 +3,9 @@ My Cryptographic Library
 
 FILE:   myCrypto.c
 
-Written By:  Team #   MUST WRITE YOUR TEAM NUMBER HERE
-     1- MUST WRITE YOUR FULL NAME
-     2- MUST WRITE YOUR FULL NAME
+Written By:  Team # 8
+     1- Jacob Susko
+     2- Sydney 
 
 Submitted on: 
 ----------------------------------------------------------------------------*/
@@ -47,19 +47,33 @@ int privKeySign( uint8_t **sig , size_t *sigLen , EVP_PKEY  *privKey ,
                  uint8_t *inData , size_t inLen ) 
 {
     // Guard against incoming NULL pointers
+    if (!sig || !sigLen || !privKey || !inData || !inLen)
+        { printf("\n privKeySign was passed a NULL pointer\n"); exit(-1); }
 
     // Create and Initialize a context for RSA private-key signing
     EVP_PKEY_CTX *ctx;
-    // EVP_PKEY_CTX_new( );
-    // EVP_PKEY_sign_init( )
-    // EVP_PKEY_CTX_set_rsa_padding(  )
+    ctx = EVP_PKEY_CTX_new(privKey, NULL);
+    if (!ctx)
+        { printf("\nUnable to create a new context with Private Key\n"); exit(-1); }
+
+    if (EVP_PKEY_sign_init(ctx) <= 0)
+        { printf("\nUnable to initialize context for private key\n"); exit(-1); }
+    
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        { printf("\nUnable to set the PADDING mode of the context for private key\n"); exit(-1); }
 
     // Determine how big the size of the signature could be
     size_t cipherLen ; 
-    // EVP_PKEY_sign( )
+    if (EVP_PKEY_sign(ctx, NULL, &cipherLen, inData, inLen) <= 0)
+        { printf("\nUnable to determine output length of private key signature\n"); exit(-1); }
     // Next allocate memory for the ciphertext
+    sig = malloc(cipherLen);
+    if (!sig)
+        { printf("\nInsufficient memory to Sign\n"); exit(-1); }
 
     // Now, actually sign the inData using EVP_PKEY_sign( )
+    if (EVP_PKEY_sign(ctx, sig, &cipherLen, inData, inLen) <= 0)
+        { printf("\nSignature of the data failed\n"); exit(-1); }
 
     // All is good
     EVP_PKEY_CTX_free( ctx );     // remember to do this if any failure is encountered above
@@ -85,14 +99,22 @@ int pubKeyVerify( uint8_t *sig , size_t sigLen , EVP_PKEY  *pubKey
     // Create and Initialize a context for RSA public-key signature verification
     EVP_PKEY_CTX *ctx;
 
-    // EVP_PKEY_CTX_new( );
-    // EVP_PKEY_verify_init( )
-    // EVP_PKEY_CTX_set_rsa_padding(  )
+    ctx = EVP_PKEY_CTX_new(pubKey, NULL);
+    if (!ctx)
+        { printf("\nUnable to create a new context of public key\n"); exit(-1); }
+
+    if (EVP_PKEY_verify_init(ctx) <= 0)
+        { pritnf("\nUnable to initialize the context for signature verification\n"); exit(-1); }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        { printf("\nUnable to set the PADDING mode of the context for signature verification\n"); exit(-1); }
 
     // Verify the signature vs the incoming data using this context
-    int decision = EVP_PKEY_verify( /* .... */ ) ;
+    int decision = EVP_PKEY_verify(ctx, sig, sigLen, data, dataLen) ;
 
-    //  free any dynamically-allocated objects 
+    //  free any dynamically-allocated objects
+    free(sig);
+    EVP_PKEY_CTX_free( ctx );
 
     return decision ;
 
