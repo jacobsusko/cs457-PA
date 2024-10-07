@@ -152,7 +152,7 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
     EVP_MD_CTX *mdCtx ;
     size_t nBytes ;
     unsigned int  mdLen, bytes_read ;
-    unsigned char buffer[ HASH_LEN ];
+    unsigned char buffer[ CIPHER_LEN_MAX ];
 
 	// Use EVP_MD_CTX_create() to create new hashing context    
     mdCtx = EVP_MD_CTX_new();
@@ -165,21 +165,20 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
         { printf("\nFailed to initalize hash function\n"); exit(-1); }
 
     mdLen = 0;
-    while ( 1 )   // Loop until end-of input file
+    while ((bytes_read = read(fd_in, buffer, CIPHER_LEN_MAX)) > 0)   // Loop until end-of input file
     {
         // Read a chund of input from fd_in. Exit the loop when End-of-File is reached
-        if (bytes_read = read(fd_in, buffer, HASH_LEN) <= 0)
-            break;
 
-        EVP_DigestUpdate( mdCtx, buffer, bytes_read);
+        if (EVP_DigestUpdate( mdCtx, buffer, bytes_read) != 1)
+            { fprintf(stdout, "\nFailed to DigestUpdate\n"); exit(-1); }
         
         // if ( fd_out > 0 ) send the above chunk of data to fd_out
         if (fd_out > 0)
-        { write(fd_out, buffer, bytes_read); }
-        mdLen += bytes_read;    
+        { write(fd_out, buffer, bytes_read); }   
     }
 
-    EVP_DigestFinal( mdCtx, digest, &bytes_read);
+    if (EVP_DigestFinal( mdCtx, digest, &mdLen) != 1)
+        { fprintf(stdout, "\nFailed to DigestFinal\n"); exit(-1); }
     
     EVP_MD_CTX_free( mdCtx);
 

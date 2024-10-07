@@ -4,7 +4,13 @@ This is Basim's Jacob Susko & Sydney Nguyen
 Basim: I will receive digest from FD 3 and file from FD 5
 Basim: Starting to receive incoming file and compute its digest
 
+64
+
 Basim: Here is locally-computed the digest of the incoming file:
+0000 - b1 49 ae fa 80 1e f9 f1-7e 4c bd b7 41 14 06 d5   .I......~L..A...
+0010 - fc 5d f0 1b 17 60 21 d4-d3 af 98 6e 90 59 9c 27   .]...`!....n.Y.'
+0020 - 8a 48 79 d6 f5 72 41 65-f2 d2 ea f4 87 18 99 e7   .Hy..rAe........
+0030 - 26 97 d2 7b c5 97 b7 ba-70 6e 61 54 21 b0 dd 12   &..{....pnaT!...
 
 Basim: I received the following signature from Amal:
 0000 - b6 7c 04 7e 62 cc 0d ab-4b e2 8b 83 59 04 12 a0   .|.~b...K...Y...
@@ -24,6 +30,4 @@ Basim: I received the following signature from Amal:
 00e0 - ad 11 15 20 17 70 c4 b8-71 27 46 9f bc 55 e4 d3   ... .p..q'F..U..
 00f0 - 0c 82 48 fb 07 fb 27 3a-7b 7c 41 7c 1c cf a6 a3   ..H...':{|A|....
 
-Basim: I found that Amal's signature is 
-0
-INVALID
+Basim: I found that Amal's signature is INVALID

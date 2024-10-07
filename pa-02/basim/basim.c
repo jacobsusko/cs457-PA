@@ -44,16 +44,17 @@ int main ( int argc , char * argv[] )
     if (fd_out == -1)
         { fprintf(log, "\nBasim could not create bunny.cpy\n"); exit(-1); }
     //    and call fileDigest() to compute its hash value in the digest[]
-    mdLen = fileDigest(fd_data, fd_out, digest);
+    mdLen = fileDigest(fd_data, fd_out, digest);  // Size coming back as 0 => redo and figure out
     
     // Use the fileDigest() function to:
     //    1) Receive the incoming data from the Data Pipe, and store a copy in bunny.cpy
     //    2) compute the hash value in the 'digest' array.
     fprintf( log , "Basim: Starting to receive incoming file and compute its digest\n");
-
+    fprintf(log, "\n%ld\n", mdLen);
 
     fprintf( log , "\nBasim: Here is locally-computed the digest of the incoming file:\n" );
     BIO_dump_fp( log , digest , mdLen ) ; 
+    
  
     // Get Amal's RSA public key from "basim/amal_pub_key.pem" which was generated 
     // outside this program using the opessl tool
