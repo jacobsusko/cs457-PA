@@ -34,7 +34,7 @@ Written By:
 #define SYMMETRIC_KEY_LEN  32
 #define INITVECTOR_LEN     16
 
-#define HASH_ALGORITHM     EVP_sha512
+#define HASH_ALGORITHM     EVP_sha512 // works with EVP_sha256
 #define HASH_LEN           64
 
 //***********************************************************************

@@ -170,7 +170,7 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
         // Read a chund of input from fd_in. Exit the loop when End-of-File is reached
 
         if (EVP_DigestUpdate( mdCtx, buffer, bytes_read) != 1)
-            { fprintf(stdout, "\nFailed to DigestUpdate\n"); exit(-1); }
+            { fprintf(stderr, "\nFailed to DigestUpdate\n"); exit(-1); }
         
         // if ( fd_out > 0 ) send the above chunk of data to fd_out
         if (fd_out > 0)
@@ -178,7 +178,7 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
     }
 
     if (EVP_DigestFinal( mdCtx, digest, &mdLen) != 1)
-        { fprintf(stdout, "\nFailed to DigestFinal\n"); exit(-1); }
+        { fprintf(stderr, "\nFailed to DigestFinal\n"); exit(-1); }
     
     EVP_MD_CTX_free( mdCtx);
 

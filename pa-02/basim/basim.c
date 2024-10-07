@@ -50,7 +50,6 @@ int main ( int argc , char * argv[] )
     //    1) Receive the incoming data from the Data Pipe, and store a copy in bunny.cpy
     //    2) compute the hash value in the 'digest' array.
     fprintf( log , "Basim: Starting to receive incoming file and compute its digest\n");
-    fprintf(log, "\n%ld\n", mdLen);
 
     fprintf( log , "\nBasim: Here is locally-computed the digest of the incoming file:\n" );
     BIO_dump_fp( log , digest , mdLen ) ; 
