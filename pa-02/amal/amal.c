@@ -97,7 +97,7 @@ int main ( int argc , char * argv[] )
     // First its length, then the signature itself
     write(fd_ctrl , &signature_len , sizeof(signature_len) );
     write(fd_ctrl , signature , signature_len );
-    write(fd_data , fd_in, mdLen);
+    write(fd_data , fd_in, sizeOf(fd_in));
 
     
     // Close all files & Free all dynamically allocated objects
