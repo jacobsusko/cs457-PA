@@ -20,7 +20,7 @@ int main ( int argc , char * argv[] )
     size_t  mdLen ;
     FILE    *log ;
     
-    char *developerName = "Jacob Susko & Sydney Nguyen" ;  
+    char *developerName = "code by Jacob Susko & Sydney Nguyen" ;  
 
     printf( "\nThis is Basim's   %s\n\n" ,  developerName ) ;
 

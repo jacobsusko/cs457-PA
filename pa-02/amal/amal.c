@@ -37,7 +37,7 @@ int main ( int argc , char * argv[] )
     fd_data = atoi(argv[2]); 
 
     // open log file
-    log = fopen("amal_log.txt", "w");
+    log = fopen("amal/logAmal.txt", "w");
     if (log == NULL) {
         perror("Error opening amal's log file");
         exit(EXIT_FAILURE);
@@ -51,19 +51,21 @@ int main ( int argc , char * argv[] )
     // <-- Open the bunny.mp4 file and call fileDigest() to compute its hash value in the digest[] -->
     
     // open bunny.mp4 file
-    fd_in = open("bunny.mp4", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    fd_in = open("bunny.mp4", O_RDONLY);
     if (fd_in < 0) {
         fprintf(log, "\nAmal could not open bunny.mp4\n"); 
         exit(-1);
     }
 
+    fprintf(log, "Amal: Starting to digest the input file\n"); 
+
     // call fileDigest() to compute the hash of bunny.mp4 and store it in the digest array
     mdLen = fileDigest( fd_in , fd_data , digest ) ;
-    if (!mdLen) {
+    if (mdLen == 0) {
         fprintf(log, "Failed to compute file digest\n");
         fclose(log);
         close(fd_in);
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     // checkpoint: logging computed digest (hash value)
@@ -72,7 +74,7 @@ int main ( int argc , char * argv[] )
 
     // Get Amal's RSA private key generated outside this program using the opessl tool 
     EVP_PKEY  *priv_key = NULL  ;
-    priv_key = getRSAfromFile("amal/amal_priv_key.pem", 1);
+    priv_key = getRSAfromFile("amal/amal_priv_key.pem", 0);
     if (! priv_key)
     { 
         fprintf(log, "\nAmal could not retrieve Amal's generated private key\n"); 
@@ -82,8 +84,8 @@ int main ( int argc , char * argv[] )
     // Call privKeySign() to sign the digest using Amal's private key
     uint8_t *signature = NULL  ;
     size_t   signature_len ;
-
-    if (!privKeySign(priv_key, digest, mdLen, &signature, &signature_len)) 
+    // privKeySign(priv_key, digest, mdLen, &signature, &signature_len)
+    if (!privKeySign(&signature, &signature_len, priv_key, digest, mdLen)) 
     {
         fprintf(log, "Unable to sign digest using Amal's Private key\n");
         EVP_PKEY_free(priv_key);
@@ -104,7 +106,8 @@ int main ( int argc , char * argv[] )
     // Close all files & Free all dynamically allocated objects
     close(fd_ctrl);
     close(fd_data);
-    free(log);
+    fflush(log);
+    fclose(log);
     //free(developerName);
     EVP_PKEY_free(priv_key);
     free(signature);

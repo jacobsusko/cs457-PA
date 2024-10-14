@@ -47,7 +47,7 @@ int main( int argc , char *argv[] )
         snprintf( arg2 , 20 , "%d" , AtoB_data[ WRITE_END ] ) ;
         
         // Now, Start Amal
-        char * cmnd = "./amal/amalReference" ;
+        char * cmnd = "./amal/amal" ;
         execlp( cmnd , "Amal" , arg1 , arg2 , NULL );
 
         // the above execlp() only returns if an error occurs

@@ -92,7 +92,7 @@ int privKeySign( uint8_t **sig , size_t *sigLen , EVP_PKEY  *privKey ,
     if (EVP_PKEY_sign(ctx, NULL, &cipherLen, inData, inLen) <= 0)
         { printf("\nUnable to determine output length of private key signature\n"); exit(-1); }
     // Next allocate memory for the ciphertext
-    sig = malloc(cipherLen);
+    *sig = malloc(cipherLen);
     if (!sig)
         { printf("\nInsufficient memory to Sign\n"); exit(-1); }
 
@@ -100,6 +100,7 @@ int privKeySign( uint8_t **sig , size_t *sigLen , EVP_PKEY  *privKey ,
     if (EVP_PKEY_sign(ctx, *sig, &cipherLen, inData, inLen) <= 0)
         { printf("\nSignature of the data failed\n"); exit(-1); }
 
+    *sigLen = cipherLen;
     // All is good
     EVP_PKEY_CTX_free( ctx );     // remember to do this if any failure is encountered above
 
@@ -174,7 +175,7 @@ size_t fileDigest( int fd_in , int fd_out , uint8_t *digest )
         
         // if ( fd_out > 0 ) send the above chunk of data to fd_out
         if (fd_out > 0)
-        { write(fd_out, buffer, bytes_read); }   
+        { write(fd_out, buffer, bytes_read); }
     }
 
     if (EVP_DigestFinal( mdCtx, digest, &mdLen) != 1)

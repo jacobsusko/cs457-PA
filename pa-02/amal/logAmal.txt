@@ -1,5 +1,5 @@
 
-This is Amal's REFERENCE Code by ABOUTABL.
+This is Amal's code by Sydney Nguyen and Jacob Susko.
 
 Amal: I will send digest to FD 4 and file to FD 6
 Amal: Starting to digest the input file
