@@ -53,7 +53,7 @@ int main ( int argc , char * argv[] )
     // open bunny.mp4 file
     fd_in = open("bunny.mp4", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd_in < 0) {
-        fprintf(log, "\nAMal could not open bunny.mp4\n"); 
+        fprintf(log, "\nAmal could not open bunny.mp4\n"); 
         exit(-1);
     }
 
@@ -97,7 +97,7 @@ int main ( int argc , char * argv[] )
     // First its length, then the signature itself
     write(fd_ctrl , &signature_len , sizeof(signature_len) );
     write(fd_ctrl , signature , signature_len );
-    write(fd_data , )
+    write(fd_data , fd_in, md_len);
 
     
     // Close all files & Free all dynamically allocated objects
