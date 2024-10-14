@@ -2,7 +2,7 @@
 
 # "Script to Generate RSA Public/Private key Pair"
 
-# "Written By:  1- MUST WRITE YOUR NAME(s) HERE ( OR LOSE SOME POINTS )
+# "Written By: Jacob Susko & Syndey Nguyen
 
 echo
 echo
