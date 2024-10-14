@@ -32,9 +32,9 @@ int main ( int argc , char * argv[] )
 
     // <-- Get the FD arguments from the dispatcher & create the log file -->
 
-    // SPECS: Gets the read-end file descriptors of both pipes from the command-line arguments
-    fd_ctrl = atoi(argv[1]);
-    fd_data = atoi(argv[2]);
+    // SPECS: Gets the write-end file descriptors of both pipes from the command-line arguments
+    fd_ctrl = atoi(argv[1]); 
+    fd_data = atoi(argv[2]); 
 
     // open log file
     log = fopen("amal_log.txt", "w");
@@ -65,19 +65,29 @@ int main ( int argc , char * argv[] )
         exit(EXIT_FAILURE);
     }
 
+    // checkpoint: logging computed digest (hash value)
     fprintf( log , "\nAmal: Here is the digest of the file:\n" );
     BIO_dump_fp( log , digest , mdLen ) ; 
 
     // Get Amal's RSA private key generated outside this program using the opessl tool 
+    EVP_PKEY  *priv_key = NULL  ;
+    priv_key = getRSAfromFile("amal/amal_priv_key.pem", 1);
+    if (! priv_key)
+    { 
+        fprintf(log, "\nAmal could not retrieve Amal's generated private key\n"); 
+        exit(-1); 
+    }
 
     // Call privKeySign() to sign the digest using Amal's private key
     uint8_t *signature = NULL  ;
     size_t   signature_len ;
 
-    if ( ! privKeySign( /* .... */ ) )
+    if (!privKeySign(priv_key, digest, mdLen, &signature, &signature_len)) 
     {
-        fprintf( log , "Unable to sign digest using Amal's Private key\n" ); 
-        EVP_PKEY_free( rsa_privK );  exit(-1) ;
+        fprintf(log, "Unable to sign digest using Amal's Private key\n");
+        EVP_PKEY_free(priv_key);
+        fclose(log);
+        exit(-1);
     }
 
     fprintf( log , "\nAmal: Here is my signature on the file:\n" );
@@ -85,10 +95,19 @@ int main ( int argc , char * argv[] )
 
     // send the signature to Basim via the Control Pipe as a stream of bytes
     // First its length, then the signature itself
+    write(fd_ctrl , &signature_len , sizeof(signature_len) );
+    write(fd_ctrl , signature , signature_len );
+    write(fd_data , )
 
     
     // Close all files & Free all dynamically allocated objects
-    
+    close(fd_ctrl);
+    close(fd_data);
+    free(log);
+    //free(developerName);
+    free(priv_key);
+    free(signature);
+
     return 0 ;
 }
 
