@@ -57,8 +57,9 @@ int main ( int argc , char * argv[] )
         exit(-1);
     }
 
-    // ***********call fileDigest() to compute the hash of bunny.mp4 and store it in the digest array
-    if (!fileDigest(fd_in, HASH_ALGORITHM(), digest, &mdLen)) {
+    // call fileDigest() to compute the hash of bunny.mp4 and store it in the digest array
+    mdLen = fileDigest( fd_in , fd_data , digest ) ;
+    if (!mdLen) {
         fprintf(log, "Failed to compute file digest\n");
         fclose(log);
         close(fd_in);
@@ -95,9 +96,9 @@ int main ( int argc , char * argv[] )
 
     // send the signature to Basim via the Control Pipe as a stream of bytes
     // First its length, then the signature itself
-    write(fd_ctrl , &signature_len , sizeof(signature_len) );
-    write(fd_ctrl , signature , signature_len );
-    write(fd_data , fd_in, sizeOf(fd_in));
+    write(fd_ctrl , &signature_len , sizeof(signature_len) ); // sending signature length
+    write(fd_ctrl , signature , signature_len ); // send sginature itself
+    // sending bunny.mp4 file to fd_data in fileDigest in myCrypo.c
 
     
     // Close all files & Free all dynamically allocated objects
@@ -105,7 +106,7 @@ int main ( int argc , char * argv[] )
     close(fd_data);
     free(log);
     //free(developerName);
-    free(priv_key);
+    EVP_PKEY_free(priv_key);
     free(signature);
 
     return 0 ;
