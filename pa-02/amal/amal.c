@@ -106,8 +106,8 @@ int main ( int argc , char * argv[] )
     // Close all files & Free all dynamically allocated objects
     close(fd_ctrl);
     close(fd_data);
-    fflush(log);
-    fclose(log);
+    close(fd_in);
+    free(log);
     //free(developerName);
     EVP_PKEY_free(priv_key);
     free(signature);
