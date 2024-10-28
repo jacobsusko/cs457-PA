@@ -107,7 +107,7 @@ int main ( int argc , char * argv[] )
     close(fd_ctrl);
     close(fd_data);
     close(fd_in);
-    free(log);
+    fclose(log);
     //free(developerName);
     EVP_PKEY_free(priv_key);
     free(signature);
