@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # "Script to run Programming Assignment #2"
-# "By: Jacob Susko & Syndey Nguyen"
+# "By: Jacob Susko & Sydney Nguyen"
 
 # Clean up any old files from previous runs
 rm -f  dispatcher  bunny.mp4 bunny.cpy

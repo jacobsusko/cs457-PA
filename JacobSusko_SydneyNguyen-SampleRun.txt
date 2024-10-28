@@ -1,0 +1,4 @@
+script  mySampleRun.txt
+./genPkey.sh
+./pa-02.sh
+exit
