@@ -5,7 +5,8 @@ test1: clean
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo
 	cp  kdcReference         kdc/kdc
-	gcc amal/amal.c          myCrypto.c   -o amal/amal    -lcrypto
+	# gcc amal/amal.c          myCrypto.c   -o amal/amal    -lcrypto
+	cp amalReference         amal/amal
 	cp  basimReference       basim/basim
 	gcc wrappers.c     dispatcher.c -o dispatcher
 	ln -f -s ../amal/amalKey.bin        kdc/amalKey.bin
