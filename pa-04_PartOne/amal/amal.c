@@ -47,7 +47,7 @@ int main ( int argc , char * argv[] )
     int      fd_A2K , fd_K2A , fd_A2B , fd_B2A  ;
     FILE    *log ;
 
-    char *developerName = "Code by STUDENTS_LAST_NAMES" ;
+    char *developerName = "Susko & Nyguen" ;
 
     fprintf( stdout , "Starting Amal's      %s.\n" , developerName  ) ;
     
@@ -57,10 +57,10 @@ int main ( int argc , char * argv[] )
                "<getFr. Basim> <sendTo Basim>\n\n" , argv[0]) ;
         exit(-1) ;
     }
-    fd_K2A    = ...... ;  // Read from KDC    File Descriptor
-    fd_A2K    = ...... ;  // Send to   KDC    File Descriptor
-    fd_B2A    = ...... ;  // Read from Basim  File Descriptor
-    fd_A2B    = ...... ;  // Send to   Basim  File Descriptor
+    fd_K2A    = atoi(argv[1]) ;  // Read from KDC    File Descriptor
+    fd_A2K    = atoi(argv[2]) ;  // Send to   KDC    File Descriptor
+    fd_B2A    = atoi(argv[3]) ;  // Read from Basim  File Descriptor
+    fd_A2B    = atoi(argv[4]) ;  // Send to   Basim  File Descriptor
 
     log = fopen("amal/logAmal.txt" , "w" );
     if( ! log )
@@ -82,21 +82,35 @@ int main ( int argc , char * argv[] )
 
 
     // Use  getKeyFromFile( "amal/amalKey.bin" , .... ) )
-	// On failure, print "\nCould not get Amal's Masker key & IV.\n" to both  stderr and the Log file
-	// and exit(-1)
+    if (getKeyFromFile( "amal/amalKey.bin", &Ka) == 0) // failed
+    {
+        // On failure, print "\nCould not get Amal's Masker key & IV.\n" to both  stderr and the Log file
+        // and exit(-1)
+        fprintf(log , "\nCould not get Amal's Master key & IV.\n");
+        fprintf(stderr , "\nCould not get Amal's Master key & IV.\n");
+        exit(-1);
+    }
 	// On success, print "Amal has this Master Ka { key , IV }\n" to the Log file
-	// BIO_dump the Key IV indented 4 spaces to the righ
+    fprintf( log , "Amal has this Master Ka { key , IV }\n");
+	// BIO_dump the Key IV indented 4 spaces to the right
+    BIO_dump_indent_fp( log, &Ka.key, SYMMETRIC_KEY_LEN, 4);
     fprintf( log , "\n" );
-	// BIO_dump the IV indented 4 spaces to the righ
+	// BIO_dump the IV indented 4 spaces to the right
+    BIO_dump_indent_fp( log, &Ka.iv, INITVECTOR_LEN, 4);
+    fprintf( log , "\n" );
 
 
     // Get Amal's pre-created Nonces: Na and Na2
 	Nonce_t   Na , Na2; 
     fprintf( log , "Amal will use these Nonces:  Na  and Na2\n"  ) ;
 	// Use getNonce4Amal () to get Amal's 1st and second nonces into Na and Na2, respectively
+    getNonce4Amal(1, Na);
+    getNonce4Amal(2, Na2);
 	// BIO_dump Na indented 4 spaces to the righ
+    BIO_dump_indent_fp( log, &Na, NONCELEN, 4);
     fprintf( log , "\n" );
 	// BIO_dump Na2 indented 4 spaces to the righ
+    BIO_dump_indent_fp( log, &Na2, NONCELEN, 4);
     fprintf( log , "\n") ; 
 
     fflush( log ) ;

@@ -19,13 +19,4 @@ Basim has this Master Kb { key , IV }
 ***************************************************
          MSG1 Receive
 ***************************************************
-MSG1 ( 49 bytes ) has been received on FD 3 by MSG1_receive():
-
-KDC received message 1 from Amal with:
-    IDa = 'Amal is Hope'
-    IDb = 'Basim is Smiley'
-    Na ( 4 Bytes ) is:
-    0000 - 44 33 22 11                                       D3".
-
-
-The KDC has terminated normally. Goodbye
+Unable to receive all 8 bytes of Len(IDA) in MSG1_receive() ... EXITING
