@@ -5,8 +5,10 @@ test1: clean
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo
 	cp  kdcReference         kdc/kdc
+	# gcc kdc/kdc.c            myCrypto.c   -o kdc/kdc      -lcrypto
 	gcc amal/amal.c          myCrypto.c   -o amal/amal    -lcrypto
 	cp  basimReference       basim/basim
+	# gcc basim/basim.c        myCrypto.c   -o basim/basim  -lcrypto
 	gcc wrappers.c     dispatcher.c -o dispatcher
 	ln -f -s ../amal/amalKey.bin        kdc/amalKey.bin
 	ln -f -s ../basim/basimKey.bin      kdc/basimKey.bin

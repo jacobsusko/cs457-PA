@@ -4,8 +4,8 @@ PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way A
 FILE:   basim.c     SKELETON
 
 Written By: 
-     1- YOU  MUST   WRITE 
-	 2- FULL NAMES  HERE   (or risk losing points )
+     1- Jacob Susko
+	 2- Sydney Nyguen
 Submitted on: 
      Insert the date of Submission here
 ----------------------------------------------------------------------------*/
@@ -54,8 +54,8 @@ int main ( int argc , char * argv[] )
         exit(-1) ;
     }
 
-    fd_A2B    = .... ;  // Read from Amal   File Descriptor
-    fd_B2A    = .... ;  // Send to   Amal   File Descriptor
+    fd_A2B    = atoi(argv[1]) ;  // Read from Amal   File Descriptor
+    fd_B2A    = atoi(argv[2]) ;  // Send to   Amal   File Descriptor
 
     log = fopen("basim/logBasim.txt" , "w" );
     if( ! log )
@@ -74,19 +74,32 @@ int main ( int argc , char * argv[] )
     myKey_t   Kb ;    // Basim's master key with the KDC    
 
     // Use  getKeyFromFile( "basim/basimKey.bin" , .... ) )
-	// On failure, print "\nCould not get Basim's Masker key & IV.\n" to both  stderr and the Log file
-	// and exit(-1)
+    if (getKeyFromFile( "kdc/basimKey.bin", &Kb) == 0) // failed    
+    {
+        // On failure, print "\nCould not get Basim's Masker key & IV.\n" to both  stderr and the Log file
+        // and exit(-1)
+        fprintf(log , "\nCould not get Basim's Master key & IV.\n");
+        fprintf(stderr , "\nCould not get Basim's Master key & IV.\n");
+        exit(-1);
+    }
 	// On success, print "Basim has this Master Ka { key , IV }\n" to the Log file
-	// BIO_dump the Key IV indented 4 spaces to the righ
+	fprintf( log , "Basim has this Master Kb { key , IV }\n");
+    // BIO_dump the Key IV indented 4 spaces to the righ
+    BIO_dump_indent_fp( log, &Kb.key, SYMMETRIC_KEY_LEN, 4);
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the righ
+    BIO_dump_indent_fp( log, &Kb.iv, INITVECTOR_LEN, 4);
+    fprintf( log , "\n" );
+    fflush( log ) ;
 
     // Get Basim's pre-created Nonces: Nb
 	Nonce_t   Nb;  
 
 	// Use getNonce4Basim () to get Basim's 1st and only nonce into Nb
+    getNonce4Basim(1, Nb);
     fprintf( log , "Basim will use this Nonce:  Nb\n"  ) ;
 	// BIO_dump Nb indented 4 spaces to the righ
+    BIO_dump_indent_fp( log, &Nb, NONCELEN, 4);
     fprintf( log , "\n" );
 
     fflush( log ) ;

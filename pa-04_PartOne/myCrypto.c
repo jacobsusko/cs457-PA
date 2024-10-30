@@ -642,7 +642,7 @@ void  MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na )
     }
     
     // 5) Read Na   But on failure to read Na from the pipe
-    bytesRead = read(fd, &Na, sizeof(Nonce_t));
+    bytesRead = read(fd, Na, sizeof(Nonce_t));
     LenMsg1 += bytesRead;
     if (bytesRead != sizeof(Nonce_t))
     {
