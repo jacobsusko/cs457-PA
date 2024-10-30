@@ -127,16 +127,20 @@ int main ( int argc , char * argv[] )
     uint8_t  *msg1 ;
     LenMsg1 = MSG1_new( log , &msg1 , IDa , IDb , Na ) ;
     
-    // Send MSG1 to KDC via the appropriate pipe
+    // Send MSG1 to KDC via the appropriate pipe => fdA2K
+    write(fd_A2K, msg1, LenMsg1);
 
    fprintf( log , "Amal sent message 1 ( %lu bytes ) to the KDC with:\n    "
                    "IDa ='%s'\n    "
                    "IDb = '%s'\n" , LenMsg1 , IDa , IDb ) ;
     fprintf( log , "    Na ( %lu Bytes ) is:\n" , NONCELEN ) ;
     // BIO_dump the nonce Na
+    BIO_dump_indent_fp( log, &Na, NONCELEN, 4);
+    fprintf( log , "\n") ;
     fflush( log ) ;
 
     // Deallocate any memory allocated for msg1
+    free(msg1);
 
 
     // PA-04 Part Two

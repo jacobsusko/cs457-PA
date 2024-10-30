@@ -511,7 +511,6 @@ int getKeyFromFile( char *keyF , myKey_t *x )
 
 unsigned MSG1_new ( FILE *log , uint8_t **msg1 , const char *IDa , const char *IDb , const Nonce_t Na )
 {
-
     //  Check agains any NULL pointers in the arguments
     if ( !log || !msg1 || !IDa || !IDb )
     {
@@ -527,7 +526,7 @@ unsigned MSG1_new ( FILE *log , uint8_t **msg1 , const char *IDa , const char *I
 
     // Allocate memory for msg1. MUST always check malloc() did not fail
     *msg1 = (uint8_t *)malloc(LenMsg1);
-    if ( !msg1 )
+    if ( !*msg1 )
         { printf("failed to malloc in msg1_new"); exit(-1); }
 
     // Fill in Msg1:  Len( IDa )  ||  IDa   ||  Len( IDb )  ||  IDb   ||  Na
@@ -546,11 +545,11 @@ unsigned MSG1_new ( FILE *log , uint8_t **msg1 , const char *IDa , const char *I
     memcpy(p, IDb, LenB);
     p += LenB;
 
-    memcpy(p, &Na, sizeof(Nonce_t));
+    memcpy(p, Na, NONCELEN);
 
     fprintf( log , "The following new MSG1 ( %lu bytes ) has been created by MSG1_new ():\n" , LenMsg1 ) ;
     // BIO_dumpt the completed MSG1 indented 4 spaces to the right
-    BIO_dump_indent_fp( log, msg1, LenMsg1, 4);
+    BIO_dump_indent_fp( log, *msg1, LenMsg1, 4);
     fprintf( log , "\n" ) ;
     
     return LenMsg1 ;
@@ -592,7 +591,7 @@ void  MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na )
     *IDa = (char *)malloc(LenA);
     if ( !IDa )
     {
-        fprintf( log , "Out of Memory allocating %u bytes for IDA in MSG1_receive() "
+        fprintf( log , "Out of Memory allocating %lu bytes for IDA in MSG1_receive() "
                        "... EXITING\n" , LenA );
         fflush( log ) ;  fclose( log ) ;
         exitError( "Out of Memory allocating IDA in MSG1_receive()" );
@@ -625,7 +624,7 @@ void  MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na )
     *IDb = (char *)malloc(LenB);
     if ( !IDb )
     {
-        fprintf( log , "Out of Memory allocating %u bytes for IDB in MSG1_receive() "
+        fprintf( log , "Out of Memory allocating %lu bytes for IDB in MSG1_receive() "
                        "... EXITING\n" , LenB );
         fflush( log ) ;  fclose( log ) ;
         exitError( "Out of Memory allocating IDB in MSG1_receive()" );
@@ -636,7 +635,7 @@ void  MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na )
     LenMsg1 += bytesRead;
     if (bytesRead != LenB)
     {
-        fprintf( log , "Unable to receive all %u bytes of IDB in MSG1_receive() "
+        fprintf( log , "Unable to receive all %lu bytes of IDB in MSG1_receive() "
                        "... EXITING\n" , LenB );
         fflush( log ) ;  fclose( log ) ;
         exitError( "Unable to receive all bytes of IDB in MSG1_receive()" );
