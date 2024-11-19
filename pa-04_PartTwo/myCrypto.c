@@ -748,8 +748,8 @@ void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **
 
 
 
-    fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %lu bytes ) Successfully\n" 
-                 , .... );
+    // fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %lu bytes ) Successfully\n" 
+    //              , .... );
 
 
 }
@@ -787,16 +787,16 @@ void MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char *
 
 
 
-    fprintf( log ,"The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_receive()\n" 
-                 , ....  );
-    BIO_dump_indent_fp( log , ciphertext , lenTktCipher , 4 ) ;   fprintf( log , "\n");
-    fflush( log ) ;
+    // fprintf( log ,"The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_receive()\n" 
+    //              , ....  );
+    // BIO_dump_indent_fp( log , ciphertext , lenTktCipher , 4 ) ;   fprintf( log , "\n");
+    // fflush( log ) ;
 
 
 
-    fprintf( log ,"Here is the Decrypted Ticket ( %lu bytes ) in MSG3_receive():\n" , lenTktPlain ) ;
-    BIO_dump_indent_fp( log , decryptext , ..... , 4 ) ;   fprintf( log , "\n");
-    fflush( log ) ;
+    // fprintf( log ,"Here is the Decrypted Ticket ( %lu bytes ) in MSG3_receive():\n" , lenTktPlain ) ;
+    // BIO_dump_indent_fp( log , decryptext , ..... , 4 ) ;   fprintf( log , "\n");
+    // fflush( log ) ;
 
 
 
@@ -823,14 +823,14 @@ size_t  MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 
     // Use the global scratch buffer ciphertext[] to collect the result. Make sure it fits.
 
     // Now allocate a buffer for the caller, and copy the encrypted MSG4 to it
-    *msg4 = malloc( .... ) ;
+    // *msg4 = malloc( .... ) ;
 
 
 
     
-    fprintf( log , "The following Encrypted MSG4 ( %lu bytes ) has been"
-                   " created by MSG4_new ():  \n" , LenMsg4 ) ;
-    BIO_dump_indent_fp( log , *msg4 , ... ) ;
+    // fprintf( log , "The following Encrypted MSG4 ( %lu bytes ) has been"
+    //                " created by MSG4_new ():  \n" , LenMsg4 ) ;
+    // BIO_dump_indent_fp( log , *msg4 , ... ) ;
 
     return LenMsg4 ;
     
@@ -867,13 +867,13 @@ size_t  MSG5_new( FILE *log , uint8_t **msg5, const myKey_t *Ks ,  Nonce_t *fNb 
 
 
     // Now allocate a buffer for the caller, and copy the encrypted MSG5 to it
-    *msg5 = malloc( ... ) ;
+    // *msg5 = malloc( ... ) ;
 
 
-    fprintf( log , "The following Encrypted MSG5 ( %lu bytes ) has been"
-                   " created by MSG5_new ():  \n" , LenMSG5cipher ) ;
-    BIO_dump_indent_fp( log , *msg5 , LenMSG5cipher , 4 ) ;    fprintf( log , "\n" ) ;    
-    fflush( log ) ;    
+    // fprintf( log , "The following Encrypted MSG5 ( %lu bytes ) has been"
+    //                " created by MSG5_new ():  \n" , LenMSG5cipher ) ;
+    // BIO_dump_indent_fp( log , *msg5 , LenMSG5cipher , 4 ) ;    fprintf( log , "\n" ) ;    
+    // fflush( log ) ;    
 
     return LenMSG5cipher ;
 
