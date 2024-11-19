@@ -1,14 +1,13 @@
 /*----------------------------------------------------------------------------
-pa-04_PartOne:  Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
+pa-04_PartTwo:  Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
 FILE:   kdc.c    SKELETON
 
 Written By: 
-     1- Dr. Mohamed Aboutabl
-     2- Jacob Susko
-	 3- Sydney Nyguen
+     1- Jacob Susko
+	 2- Sydney Nyguen
 Submitted on: 
-    11/2/2024
+    11/21/2024
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -22,6 +21,7 @@ Submitted on:
 //*************************************
 int main ( int argc , char * argv[] )
 {
+    // Your code from pa-04_PartOne
     int       fd_A2K , fd_K2A   ;
     FILE     *log ;
     
@@ -120,16 +120,22 @@ int main ( int argc , char * argv[] )
     BIO_dump_indent_fp( log, &Na, NONCELEN, 4);
     fprintf( log , "\n") ;
     fflush( log ) ;
+    
+    
 
-
+    //*************************************   
+    // Construct & Send    Message 2
+    //*************************************
     // PA-04 Part Two
-    // will go here
+    BANNER( log ) ;
+    fprintf( log , "         MSG2 New\n");
+    BANNER( log ) ;
 
 
     //*************************************   
     // Final Clean-Up
-    //*************************************
-    
+    //*************************************   
+end_:
     fprintf( log , "\nThe KDC has terminated normally. Goodbye\n" ) ;
     fclose( log ) ;  
     return 0 ;

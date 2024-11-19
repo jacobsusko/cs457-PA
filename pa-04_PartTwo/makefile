@@ -1,26 +1,24 @@
 test1: clean
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	@echo "1) Testing STUDENT's Amal against ABOUTABL's KDC+Basim"
+	@echo "1) Testing STUDENT's Amal against REFERENCE's KDC+Basim"
 	@echo "   Validates   M1.send ,   M2.receive   ,  M3.send  ,  M4.receive  ,  M5.send"
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo
 	cp  kdcReference         kdc/kdc
-	# gcc kdc/kdc.c            myCrypto.c   -o kdc/kdc      -lcrypto
 	gcc amal/amal.c          myCrypto.c   -o amal/amal    -lcrypto
 	cp  basimReference       basim/basim
-	# gcc basim/basim.c        myCrypto.c   -o basim/basim  -lcrypto
 	gcc wrappers.c     dispatcher.c -o dispatcher
 	ln -f -s ../amal/amalKey.bin        kdc/amalKey.bin
 	ln -f -s ../basim/basimKey.bin      kdc/basimKey.bin
 	./dispatcher
 	@echo
-	@echo "======  ABOUTABL's   KDC    LOG  ========="
+	@echo "======  REFERENCE's   KDC    LOG  ========="
 	@cat kdc/logKDC.txt
 	@echo
 	@echo "======  STUDENT's    Amal   LOG  ========="
 	@cat amal/logAmal.txt
 	@echo
-	@echo "======  ABOUTABL's   Basim  LOG  ========="
+	@echo "======  REFERENCE's   Basim  LOG  ========="
 	@cat basim/logBasim.txt
 	@echo
 	@echo "======  Comparing Log Files to the Expected Logs  ========="
@@ -35,7 +33,7 @@ test1: clean
 test2: clean
 	@echo
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	@echo "2) Testing STUDENT's KDC against ABOUTABL's Amal+Basim"
+	@echo "2) Testing STUDENT's KDC against REFERENCE's Amal+Basim"
 	@echo "   Validates   M1.receive ,   M2.send"
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo
@@ -51,10 +49,10 @@ test2: clean
 	@cat kdc/logKDC.txt
 	@echo
 	@echo
-	@echo "======  ABOUTABL's   Amal   LOG  ========="
+	@echo "======  REFERENCE's   Amal   LOG  ========="
 	@cat amal/logAmal.txt
 	@echo
-	@echo "======  ABOUTABL's   Basim  LOG  ========="
+	@echo "======  REFERENCE's   Basim  LOG  ========="
 	@cat basim/logBasim.txt
 	@echo
 	@echo "======  Comparing Log Files to the Expected Logs  ========="
@@ -69,7 +67,7 @@ test2: clean
 test3: clean
 	@echo
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	@echo "3) Testing STUDENT's Basim against ABOUTABL's KDC+Amal"
+	@echo "3) Testing STUDENT's Basim against REFERENCE's KDC+Amal"
 	@echo "   Validates    M3.receive  ,  M4.send  ,  M5.receive"
 	@echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 	@echo
@@ -81,11 +79,11 @@ test3: clean
 	ln -f -s ../basim/basimKey.bin      kdc/basimKey.bin
 	./dispatcher
 	@echo
-	@echo "======  ABOUTABL's   KDC    LOG  ========="
+	@echo "======  REFERENCE's   KDC    LOG  ========="
 	@cat kdc/logKDC.txt
 	@echo
 	@echo
-	@echo "======  ABOUTABL's   Amal   LOG  ========="
+	@echo "======  REFERENCE's   Amal   LOG  ========="
 	@cat amal/logAmal.txt
 	@echo
 	@echo "======  STUDENT's    Basim  LOG  ========="

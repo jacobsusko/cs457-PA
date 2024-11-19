@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
+pa-04_PartTwo:  Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
 FILE:   amal.c     SKELETON
 
@@ -7,7 +7,7 @@ Written By:
      1- Jacob Susko
 	 2- Sydney Nyguen
 Submitted on: 
-     11/2/2024
+     11/21/2024
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -43,8 +43,9 @@ void  getNonce4Amal( int which , Nonce_t  value )
 // The Main Loop
 //*************************************
 int main ( int argc , char * argv[] )
-{
-    int      fd_A2K , fd_K2A , fd_A2B , fd_B2A  ;
+{ 
+    // Your code from pa-04_PartOne
+        int      fd_A2K , fd_K2A , fd_A2B , fd_B2A  ;
     FILE    *log ;
 
     char *developerName = "Susko & Nyguen" ;
@@ -141,16 +142,46 @@ int main ( int argc , char * argv[] )
 
     // Deallocate any memory allocated for msg1
     free(msg1);
+    
+    
+    
+    //*************************************
+    // Receive   &   Process Message 2
+    //*************************************
+	// PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG2 Receive\n");
+    BANNER( log ) ;
 
+    //*************************************
+    // Construct & Send    Message 3
+    //*************************************
+	// PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG3 New\n");
+    BANNER( log ) ;
 
-    // PA-04 Part Two
-    // will go here
+    //*************************************
+    // Receive   & Process Message 4
+    //*************************************
+	// PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG4 Receive\n");
+    BANNER( log ) ;
+
+    //*************************************
+    // Construct & Send    Message 5
+    //*************************************
+	// PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG5 New\n");
+    BANNER( log ) ;
 
 
     //*************************************   
     // Final Clean-Up
-    //*************************************
-   
+    //*************************************  
+end_:
     fprintf( log , "\nAmal has terminated normally. Goodbye\n" ) ;  
     fclose( log ) ;
     return 0 ;

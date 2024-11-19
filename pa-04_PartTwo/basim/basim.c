@@ -1,13 +1,13 @@
 /*----------------------------------------------------------------------------
-PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
+pa-04_PartTwo:  Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
 FILE:   basim.c     SKELETON
 
 Written By: 
-     1- Jacob Susko
+     1- Jacob Susko 
 	 2- Sydney Nyguen
 Submitted on: 
-     11/2/2024
+     11/21/2024
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -40,6 +40,7 @@ void  getNonce4Basim( int which , Nonce_t  value )
 //*************************************
 int main ( int argc , char * argv[] )
 {
+    // Your code from pa-04_PartOne
     int       fd_A2B , fd_B2A   ;
     FILE     *log ;
 
@@ -103,16 +104,36 @@ int main ( int argc , char * argv[] )
     fprintf( log , "\n" );
 
     fflush( log ) ;
-
-
+    
+    
+    //*************************************
+    // Receive  & Process   Message 3
+    //*************************************
     // PA-04 Part Two
-    // will go here
+    BANNER( log ) ;
+    fprintf( log , "         MSG3 Receive\n");
+    BANNER( log ) ;
 
+    //*************************************
+    // Construct & Send    Message 4
+    //*************************************
+    // PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG4 New\n");
+    BANNER( log ) ;
+
+    //*************************************
+    // Receive   & Process Message 5
+    //*************************************
+    // PA-04 Part Two
+    BANNER( log ) ;
+    fprintf( log , "         MSG5 Receive\n");
+    BANNER( log ) ;
 
     //*************************************   
     // Final Clean-Up
     //*************************************
-
+end_:
     fprintf( log , "\nBasim has terminated normally. Goodbye\n" ) ;
     fclose( log ) ;  
 

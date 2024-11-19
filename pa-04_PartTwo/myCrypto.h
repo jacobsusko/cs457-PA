@@ -17,6 +17,7 @@ Written By:
 #include <string.h>
 #include <linux/random.h>
 #include <assert.h>
+#include <arpa/inet.h>
 
 /* OpenSSL headers */
 #include <openssl/ssl.h>
@@ -107,8 +108,33 @@ typedef struct {
 void     exitError( char *errText ) ;
 int      getKeyFromFile( char *keyF , myKey_t *x ) ;
 
-unsigned MSG1_new( FILE *log , uint8_t **msg1 , const char *IDa , const char *IDb 
+size_t   MSG1_new( FILE *log , uint8_t **msg1 , const char *IDa , const char *IDb 
                    , const Nonce_t Na ) ;
 
 void     MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na ) ;
+
+//***********************************************************************
+// PA-04   Part  TWO
+//***********************************************************************
+
+size_t MSG2_new( FILE * log , uint8_t **msg2 , const myKey_t *Ka , const myKey_t *Kb , 
+                   const myKey_t *Ks , const char *IDa , const char *IDb , Nonce_t *Na ) ;
+
+void     MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **IDb , 
+                       Nonce_t *Na , size_t *lenTktCipher , uint8_t **tktCipher ) ;
+
+size_t   MSG3_new( FILE *log , uint8_t **msg3 , const size_t lenTktCipher , const uint8_t *tktCipher, 
+                   const Nonce_t *Na2 ) ;
+
+void     MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char **IDa , Nonce_t *Na2 ) ;
+
+size_t   MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 , Nonce_t *Nb ) ;
+
+void     MSG4_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *rcvd_fNa2 , Nonce_t *Nb ) ;
+
+size_t   MSG5_new( FILE *log , uint8_t **msg5, const myKey_t *Ks ,  Nonce_t *fNb ) ;
+
+void     MSG5_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *fNb ) ;
+
+void     fNonce( Nonce_t r , Nonce_t n ) ;
 
