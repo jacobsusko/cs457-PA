@@ -981,24 +981,44 @@ void MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char *
 size_t  MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 , Nonce_t *Nb )
 {
 
-    size_t LenMsg4 ;
+    size_t LenMsg4;
+    size_t plaintext_len, ciphertext_len;
 
     // Construct MSG4 Plaintext = { f(Na2)  ||  Nb }
     // Use the global scratch buffer plaintext[] for MSG4 plaintext and fill it in with component values
+    plaintext_len = fNa2->size + Nb->size;
+    if (plaintext_len > sizeof(plaintext)) {
+        fprintf(log, "Error: MSG4 plaintext too large for scratch buffer\n");
+        return 0;
+    }
 
+    memcpy(plaintext, fNa2->data, fNa2->size);       // Copy f(Na2)
+    memcpy(plaintext + fNa2->size, Nb->data, Nb->size); // Concatenate Nb
 
     // Now, encrypt MSG4 plaintext using the session key Ks;
+    ciphertext_len = encrypt_with_key(Ks, plaintext, plaintext_len, ciphertext);
+    if (ciphertext_len > sizeof(ciphertext)) {
+        fprintf(log, "Error: MSG4 ciphertext too large for scratch buffer\n");
+        return 0;
+    }
+
+    //****************CHECK THIS******************** */
     // Use the global scratch buffer ciphertext[] to collect the result. Make sure it fits.
 
     // Now allocate a buffer for the caller, and copy the encrypted MSG4 to it
     // *msg4 = malloc( .... ) ;
+    *msg4 = (uint8_t *)malloc(ciphertext_len);
+    if (*msg4 == NULL) {
+        fprintf(log, "Error: Memory allocation failed for MSG4\n");
+        return 0;
+    }
 
+    memcpy(*msg4, ciphertext, ciphertext_len);
+    LenMsg4 = ciphertext_len;
 
-
-    
-    // fprintf( log , "The following Encrypted MSG4 ( %lu bytes ) has been"
-    //                " created by MSG4_new ():  \n" , LenMsg4 ) ;
-    // BIO_dump_indent_fp( log , *msg4 , ... ) ;
+    fprintf( log , "The following Encrypted MSG4 ( %lu bytes ) has been"
+                    " created by MSG4_new ():  \n" , LenMsg4 ) ;
+    BIO_dump_indent_fp(log, (const char *)*msg4, LenMsg4, 4);
 
     return LenMsg4 ;
     
@@ -1009,10 +1029,50 @@ size_t  MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 
 // Receive Message #4 by Amal from Basim
 // Parse the incoming encrypted msg4 into the values rcvd_fNa2 and Nb
 
-void  MSG4_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *rcvd_fNa2 , Nonce_t *Nb )
+void MSG4_receive(FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2, Nonce_t *Nb)
 {
+    uint8_t *encrypted_msg4 = NULL;
+    //uint8_t plaintext[SCRATCH_BUFFER_SIZE]; // ****** NEED TO: define SCRATCH_BUFFER_SIZE********
+    size_t encrypted_len, plaintext_len;
 
+    // step 1: read the encrypted MSG4 from fd
+    if (read_fd(fd, &encrypted_msg4, &encrypted_len) == -1) { 
+        fprintf(log, "Error: Failed to read encrypted MSG4 from fd\n");
+        return;
+    }
 
+    fprintf(log, "Received encrypted MSG4 (%lu bytes):\n", encrypted_len);
+    BIO_dump_indent_fp(log, (const char *)encrypted_msg4, encrypted_len, 4);
+
+    // step 2: decrypt the encrypted MSG4 using session key Ks
+    plaintext_len = decrypt_with_key(Ks, encrypted_msg4, encrypted_len, plaintext);
+    if (plaintext_len == 0) {
+        fprintf(log, "Error: Failed to decrypt MSG4\n");
+        free(encrypted_msg4);
+        return;
+    }
+
+    fprintf(log, "Decrypted MSG4 (%lu bytes):\n", plaintext_len);
+    BIO_dump_indent_fp(log, (const char *)plaintext, plaintext_len, 4);
+
+    // step 3: parse plaintext into rcvd_fNa2 + Nb
+    if (plaintext_len < rcvd_fNa2->size + Nb->size) {
+        fprintf(log, "Error: Decrypted MSG4 size mismatch\n");
+        free(encrypted_msg4);
+        return;
+    }
+
+    memcpy(rcvd_fNa2->data, plaintext, rcvd_fNa2->size);
+    memcpy(Nb->data, plaintext + rcvd_fNa2->size, Nb->size);
+
+    fprintf(log, "Parsed rcvd_fNa2 (size: %lu bytes):\n", rcvd_fNa2->size);
+    BIO_dump_indent_fp(log, (const char *)rcvd_fNa2->data, rcvd_fNa2->size, 4);
+
+    fprintf(log, "Parsed Nb (size: %lu bytes):\n", Nb->size);
+    BIO_dump_indent_fp(log, (const char *)Nb->data, Nb->size, 4);
+
+    // Step 4: Clean up
+    free(encrypted_msg4);
 }
 
 //-----------------------------------------------------------------------------
