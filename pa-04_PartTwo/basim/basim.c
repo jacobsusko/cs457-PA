@@ -113,6 +113,10 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG3 Receive\n");
     BANNER( log ) ;
+    myKey_t Ks;
+    char *IDa2;
+    Nonce_t Na_msg3;
+    MSG3_receive(log, fd_A2B, &Kb, &Ks, &IDa2, &Na_msg3);
 
     //*************************************
     // Construct & Send    Message 4

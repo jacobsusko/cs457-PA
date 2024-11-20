@@ -25,7 +25,7 @@ int main ( int argc , char * argv[] )
     int       fd_A2K , fd_K2A   ;
     FILE     *log ;
     
-    char *developerName = "Code by STUDENTS_LAST_NAMES" ;
+    char *developerName = "Susko & Nyugen" ;
 
     fprintf( stdout , "Starting the KDC's   %s\n"  , developerName ) ;
 
@@ -130,7 +130,28 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG2 New\n");
     BANNER( log ) ;
+    // Get session key
+    myKey_t   Ks ;
+    if (getKeyFromFile( "kdc/sessionKey.bin", &Ks) == 0) // failed    
+    {
+        fprintf(log , "\nCould not get Session key & IV.\n");
+        fprintf(stderr , "\nCould not get Session key & IV.\n");
+        exit(-1);
+    }
+	// On success, print "Basim has this Master Ka { key , IV }\n" to the Log file
+    fprintf( log , "KDC: created this session key Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
+	// BIO_dump the Key IV indented 4 spaces to the right
+    BIO_dump_indent_fp( log, &Ks, KEYSIZE, 4);
+    fprintf( log , "\n" );
+    fflush( log ) ;
 
+    uint8_t *msg2;
+    size_t msg2_len = MSG2_new(log, &msg2, &Ka, &Kb, &Ks, IDa, IDb, &Na);
+
+    write(fd_K2A, &msg2_len, LENSIZE);
+    write(fd_K2A, msg2, msg2_len);
+    fprintf(log, "The KDC sent the Encrypted MSG2 ( %lu bytes ) to Amal Successfully\n", msg2_len);
+    free(msg2);
 
     //*************************************   
     // Final Clean-Up

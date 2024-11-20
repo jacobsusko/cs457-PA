@@ -151,6 +151,28 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG2 Receive\n");
     BANNER( log ) ;
+    char *IDb2;
+    Nonce_t Na_msg2;
+    size_t lenTktCipher;
+    uint8_t *tktCipher;
+    myKey_t Ks;
+    MSG2_receive(log, fd_K2A, &Ka, &Ks, &IDb2, &Na_msg2, &lenTktCipher, &tktCipher);
+
+    // 5) Printed Needed Output
+    fprintf(log, "Amal decrypted message 2 from the KDC into the following:\n");
+    fprintf(log, "    Ks { Key, IV } (%lu Bytes ) is:\n", KEYSIZE);
+    BIO_dump_indent_fp ( log ,  &Ks  ,  KEYSIZE  , 4 ) ;  fprintf( log , "\n") ;
+    fflush(log);
+
+    size_t LenB2 = strlen(IDb2) + 1; // Add 1 for Null terminator
+    fprintf(log, "    IDb (%lu Bytes):   ..... %s\n", LenB2, (memcmp(IDb, IDb2, LenB2) == 0)? "MATCH" : "MISMATCH");      // NEED TO CHECK IF MATCHES
+    BIO_dump_indent_fp ( log ,  IDb2  ,  LenB2  , 4 ) ;  fprintf( log , "\n") ;
+
+    fprintf(log, "    Received Copy of Na (%lu bytes):    >>>> %s\n", NONCELEN, (memcmp(Na, Na_msg2, NONCELEN) == 0)? "VALID" : "INVALID");  //  NEED TO CHECK IF MATCHES
+    BIO_dump_indent_fp ( log , Na_msg2 , NONCELEN , 4) ; fprintf( log , "\n" ) ;
+
+    fprintf(log, "    Encrypted Ticket (%lu bytes):\n", lenTktCipher);
+    BIO_dump_indent_fp ( log , tktCipher , lenTktCipher , 4) ; fprintf( log , "\n" ) ;
 
     //*************************************
     // Construct & Send    Message 3
@@ -159,6 +181,20 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG3 New\n");
     BANNER( log ) ;
+    uint8_t *msg3;
+    size_t lenMsg3 = MSG3_new(log, &msg3, lenTktCipher, tktCipher, &Na2);
+
+    fprintf(log, "Amal is sending this to Basim in Message 3:\n");
+    fprintf(log, "    Na2 in Message 3:\n");
+    BIO_dump_indent_fp( log, Na2, NONCELEN, 4); fprintf(log, "\n");
+
+    fprintf(log, "The following MSG3 ( %lu bytes ) has been created by MSG3_new ():\n", lenMsg3);
+    BIO_dump_indent_fp( log, msg3, lenMsg3, 4); fprintf(log, "\n");
+
+    // send message to Basim
+    write(fd_A2B, msg3, lenMsg3);
+    fprintf(log, "Amal Sent the Message 3 ( %lu bytes ) to Basim\n", lenMsg3); fprintf(log, "\n");
+    free(msg3);
 
     //*************************************
     // Receive   & Process Message 4

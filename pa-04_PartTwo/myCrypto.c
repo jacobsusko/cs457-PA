@@ -90,7 +90,6 @@ unsigned encrypt( uint8_t *pPlainText, unsigned plainText_len,
 unsigned decrypt( uint8_t *pCipherText, unsigned cipherText_len, 
                   const uint8_t *key, const uint8_t *iv, uint8_t *pDecryptedText)
 {
-
     // Your code from pLab-01
     int status;
     unsigned len = 0, decryptedLen = 0;
@@ -686,19 +685,36 @@ static unsigned char   ciphertext2[ CIPHER_LEN_MAX    ] ; // Temporarily store o
 size_t MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t *Kb , 
                    const myKey_t *Ks , const char *IDa , const char *IDb  , Nonce_t *Na )
 {
+    if ( !log || !msg2 || !IDa || !IDb )
+    {
+        printf("MSG2_new received NULL Pointers\n");
+        return 0;
+    }
 
-    size_t LenMsg2  ;
+    size_t offset = 0; // for moving memcpy
     
     //---------------------------------------------------------------------------------------
     // Construct TktPlain = { Ks  || L(IDa)  || IDa }
     // in the global scratch buffer plaintext[]
+    size_t lenIDa = strlen(IDa) + 1;
 
+    memcpy(plaintext + offset, Ks, sizeof(myKey_t));
+    offset += sizeof(myKey_t);
 
-    // Use that global array as a scratch buffer for building the plaintext of the ticket
+    memcpy(plaintext + offset, &lenIDa, LENSIZE);
+    offset += LENSIZE;
+
+    memcpy(plaintext + offset, IDa, lenIDa);
+    offset += lenIDa;
+    size_t TktPlainLen = offset;
+
     // Compute its encrypted version in the global scratch buffer ciphertext[]
+    fprintf( log , "Plaintext Ticket (%lu Bytes) is\n" ,  TktPlainLen  ) ;
+    BIO_dump_indent_fp( log , plaintext ,  TktPlainLen  , 4 ) ;    fprintf( log , "\n" ) ; 
 
     // Now, set TktCipher = encrypt( Kb , plaintext );
     // Store the result in the global scratch buffer ciphertext[]
+    size_t TktCipherLen = encrypt(plaintext, TktPlainLen, Kb->key, Kb->iv, ciphertext);
 
     //---------------------------------------------------------------------------------------
     // Construct the rest of Message 2 then encrypt it using Ka
@@ -706,52 +722,148 @@ size_t MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t *
 
     // Fill in Msg2 Plaintext:  Ks || L(IDb) || IDb  || L(Na) || Na || lenTktCipher) || TktCipher
     // Reuse that global array plaintext[] as a scratch buffer for building the plaintext of the MSG2
+    offset = 0; // reset scratch buffer
+    size_t lenIDb = strlen(IDb) + 1;
+    
+    memcpy(plaintext + offset, Ks, sizeof(myKey_t));
+    offset += sizeof(myKey_t);
 
+    memcpy(plaintext + offset, &lenIDb, LENSIZE);
+    offset += LENSIZE;
+
+    memcpy(plaintext + offset, IDb, lenIDb);
+    offset += lenIDb;
+
+    memcpy(plaintext + offset, Na, NONCELEN);
+    offset += NONCELEN;
+
+    memcpy(plaintext + offset, &TktCipherLen, LENSIZE);
+    offset += LENSIZE;
+
+    memcpy(plaintext + offset, ciphertext, TktCipherLen);
+    offset += TktCipherLen;
+
+    size_t m2_len = offset;
     // Now, encrypt Message 2 using Ka. 
     // Use the global scratch buffer ciphertext2[] to collect the results
+    size_t msg2_len = encrypt(plaintext, m2_len, Ka->key, Ka->iv, ciphertext2);
 
     // allocate memory on behalf of the caller for a copy of MSG2 ciphertext
-
+    *msg2 = (uint8_t *)malloc(msg2_len);
+    uint8_t *p;
+    p = *msg2;
+    if ( !*msg2 )
+        { fprintf(log, "Memory Allocation failed for msg2\n"); exit(-1); }
+    memcpy(p, ciphertext2, msg2_len);
+    
     // Copy the encrypted ciphertext to Caller's msg2 buffer.
 
     fprintf( log , "The following Encrypted MSG2 ( %lu bytes ) has been"
-                   " created by MSG2_new():  \n" ,  ...  ) ;
-    BIO_dump_indent_fp( log , ... ,  ...  , 4 ) ;    fprintf( log , "\n" ) ;    
+                   " created by MSG2_new():  \n" ,  msg2_len  ) ;
+    BIO_dump_indent_fp( log , *msg2 ,  msg2_len  , 4 ) ;    fprintf( log , "\n" ) ;    
 
-    fprintf( log ,"This is the content of MSG2 ( %lu Bytes ) before Encryption:\n" ,  ... );  
+    fprintf( log ,"This is the content of MSG2 ( %lu Bytes ) before Encryption:\n" ,  m2_len );  
     fprintf( log ,"    Ks { key + IV } (%lu Bytes) is:\n" , KEYSIZE );
-    BIO_dump_indent_fp ( log ,  ...  ,  ...  , 4 ) ;  fprintf( log , "\n") ; 
+    BIO_dump_indent_fp ( log ,  Ks  ,  KEYSIZE  , 4 ) ;  fprintf( log , "\n") ; 
 
-    fprintf( log ,"    IDb (%lu Bytes) is:\n" , LenB);
-    BIO_dump_indent_fp ( log ,  ...  ,  ...  , 4 ) ;  fprintf( log , "\n") ; 
+    fprintf( log ,"    IDb (%lu Bytes) is:\n" , lenIDb);
+    BIO_dump_indent_fp ( log ,  IDb  ,  lenIDb  , 4 ) ;  fprintf( log , "\n") ; 
 
     fprintf( log ,"    Na (%lu Bytes) is:\n" , NONCELEN);
-    BIO_dump_indent_fp ( log ,  ...  ,  ...  , 4 ) ;  fprintf( log , "\n") ; 
+    BIO_dump_indent_fp ( log ,  Na  ,  NONCELEN  , 4 ) ;  fprintf( log , "\n") ; 
 
-    fprintf( log ,"    Encrypted Ticket (%lu Bytes) is\n" ,  ... );
-    BIO_dump_indent_fp ( log ,  ...  ,  ...  , 4 ) ;  fprintf( log , "\n") ; 
+    fprintf( log ,"    Encrypted Ticket (%lu Bytes) is\n" ,  TktCipherLen );
+    BIO_dump_indent_fp ( log ,  ciphertext  ,  TktCipherLen  , 4 ) ;  fprintf( log , "\n") ; 
 
     fflush( log ) ;    
     
-    return LenMsg2 ;    
+    return msg2_len ;    
 
 }
 
 //-----------------------------------------------------------------------------
 // Receive Message #2 by Amal from by the KDC
 // Parse the incoming msg2 into the component fields 
-// *Ks, *IDb, *Na and TktCipher = Encr{ L(Ks) || Ks  || L(IDa)  || IDa }
+// *Ks, *IDb, *Na and TktCipher = Encr{ Ks  || L(IDa)  || IDa }
 
 void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **IDb , 
                        Nonce_t *Na , size_t *lenTktCipher , uint8_t **tktCipher )
 {
+    if ( !log || !IDb || !tktCipher )
+    { 
+        printf("MSG2_receive received NULL Pointers\n");
+        return;
+    }
 
+    size_t LenMsg2 = 0, LenB, bytesRead ;
 
+    // 1) Read Length of MSG2
+    bytesRead = read(fd, &LenMsg2, LENSIZE);
+    if (bytesRead != LENSIZE)
+    {
+        fprintf( log, "Unable to read size of Msg2\n");
+        return;
+    }
+    // 2) Read MSG2
+    uint8_t *msg2_Enc = (uint8_t *)malloc(LenMsg2);
+    if ( !msg2_Enc )
+        { fprintf(log, "Memory Allocation failed for msg2\n"); exit(-1); }
+    bytesRead = read(fd, msg2_Enc, LenMsg2);
+    if (bytesRead != LenMsg2)
+    {
+        fprintf(log, "Unable to read MSG2\n");
+        return;
+    }
+    fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %lu bytes ) Successfully\n", LenMsg2);
+    BIO_dump_indent_fp ( log ,  msg2_Enc  ,  LenMsg2  , 4 ) ;  fprintf( log , "\n") ;
+    fflush(log);
+    // 3) Decrypt MSG2 and store decrypted in global ciphertext buffer
+    uint8_t *decryptedText = (uint8_t *)malloc(LenMsg2);
+    if ( !decryptedText )
+    {
+        fprintf(log, "failed to malloc for decrypted msg2\n");
+        fflush(log);
+        return;
+    }
+    size_t decryptedLen = decrypt(msg2_Enc, LenMsg2, Ka->key, Ka->iv, decryptedText);
+    free(msg2_Enc); // Free encrypted message buffer
+    // 4) Parse Decrypted Message
+    size_t offset = 0;
+    memcpy(Ks, decryptedText + offset, KEYSIZE);
+    offset += KEYSIZE;
 
-    // fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %lu bytes ) Successfully\n" 
-    //              , .... );
+    memcpy(&LenB, decryptedText + offset, LENSIZE);
+    offset += LENSIZE;
 
+    *IDb = NULL;
+    *IDb = (char *)malloc(LenB);
+    if (!IDb) {
+        fprintf(log, "Memory allocation failed for IDb\n");
+        fflush(log);
+        return;
+    }
+    memcpy(*IDb, decryptedText + offset, LenB);
+    (*IDb)[LenB] = '\0';
+    offset += LenB;
 
+    memcpy(Na, decryptedText + offset, NONCELEN);
+    offset += NONCELEN;
+
+    memcpy(lenTktCipher, decryptedText + offset, LENSIZE);
+    offset += LENSIZE;
+
+    *tktCipher = NULL;
+    *tktCipher = (uint8_t *)malloc(*lenTktCipher);  // Allocate memory for TktCipher
+    if (!*tktCipher) {
+        fprintf(log, "Memory allocation failed for TktCipher\n");
+        fflush(log);
+        free(*IDb);
+        return;
+    }
+    memcpy(*tktCipher, decryptedText + offset, *lenTktCipher);
+    offset += *lenTktCipher;
+    
+    
 }
 
 //-----------------------------------------------------------------------------
@@ -765,11 +877,24 @@ size_t MSG3_new( FILE *log , uint8_t **msg3 , const size_t lenTktCipher , const 
 {
 
     size_t    LenMsg3 ;
+    uint8_t *p;
+    LenMsg3 = LENSIZE + lenTktCipher + NONCELEN; // size_t + lenTktCipher + Nonce_t
 
-    fprintf( log , "The following MSG3 ( %lu bytes ) has been created by "
-                   "MSG3_new ():\n" , LenMsg3 ) ;
-    BIO_dump_indent_fp( log , *msg3 , LenMsg3 , 4 ) ;    fprintf( log , "\n" ) ;    
-    fflush( log ) ;    
+    // 1) Allocate memory for msg3
+    *msg3 = (uint8_t *)malloc(LenMsg3);
+    if ( !*msg3 )
+        { printf("failed to malloc in msg3_new\n"); exit(-1); }
+
+    // 2) Fill MSG3 with parts
+    p = *msg3;
+    memcpy(p, &lenTktCipher, LENSIZE);
+    p += LENSIZE;
+
+    memcpy(p, tktCipher, lenTktCipher);
+    p += lenTktCipher;
+
+    memcpy(p, Na2, NONCELEN);
+    p += NONCELEN; 
 
     return( LenMsg3 ) ;
 
@@ -784,22 +909,65 @@ size_t MSG3_new( FILE *log , uint8_t **msg3 , const size_t lenTktCipher , const 
 
 void MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char **IDa , Nonce_t *Na2 )
 {
+    if ( !log || !IDa )
+        { printf("MSG3_recieve received NULL Pointers\n"); return; }
 
+    size_t LenMsg3 = 0, LenTicket, LenA, bytesRead ;
+    // 1) Read Length of Encrypted Ticket
+    bytesRead = read(fd, &LenMsg3, LENSIZE);
+    if (bytesRead != LENSIZE)
+        { fprintf(log, "Unable to read size of Encrypted Ticket\n"); return; }
 
+    // 2) Read Encrypted Ticket
+    uint8_t *tktCipher = (uint8_t *)malloc(LenMsg3);
+    if ( !tktCipher )
+        { fprintf(log, "Memory Allocation failed for tktCipher\n"); exit(-1); }
+    bytesRead = read(fd, tktCipher, LenMsg3);
+    if (bytesRead != LenMsg3)
+        { fprintf(log, "Unable to read tktCipher\n"); return; }
 
-    // fprintf( log ,"The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_receive()\n" 
-    //              , ....  );
-    // BIO_dump_indent_fp( log , ciphertext , lenTktCipher , 4 ) ;   fprintf( log , "\n");
-    // fflush( log ) ;
+    fprintf(log, "The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_reveive()\n", LenMsg3);
+    BIO_dump_indent_fp(log, tktCipher, LenMsg3, 4); fprintf(log, "\n");
 
+    // 3) Decrypt Encrypted Ticket
+    uint8_t *decryptedTkt = (uint8_t *)malloc(LenMsg3);
+    if ( !decryptedTkt )
+        { fprintf(log, "Unbale to allocate memory for decrypted ticket\n"); return; }
+    size_t decryptedLen = decrypt(tktCipher, LenMsg3, Kb->key, Kb->iv, decryptedTkt);
+    free(tktCipher);
 
+    fprintf(log, "Here is the Decrypted Ticket ( %lu bytes ) in MSG3_receive():\n", decryptedLen);
+    BIO_dump_indent_fp(log, decryptedTkt, decryptedLen, 4); fprintf(log, "\n");
 
-    // fprintf( log ,"Here is the Decrypted Ticket ( %lu bytes ) in MSG3_receive():\n" , lenTktPlain ) ;
-    // BIO_dump_indent_fp( log , decryptext , ..... , 4 ) ;   fprintf( log , "\n");
-    // fflush( log ) ;
+    // 4) Parse Decrypted Ticket
+    size_t offset = 0;
+    memcpy(Ks, decryptedTkt + offset, KEYSIZE);
+    offset += KEYSIZE;
 
+    memcpy(&LenA, decryptedTkt + offset, LENSIZE);
+    offset += LENSIZE;
 
+    *IDa = NULL;
+    *IDa = (char *)malloc(LenA);
+    if (!IDa)
+        { fprintf(log, "Memory Allocation failed for IDa\n"); return; }
+    memcpy(*IDa, decryptedTkt + offset, LenA);
+    (*IDa)[LenA] = '\0';
+    offset += LenA;
 
+    fprintf(log, "Basim received Message 3 from Amal with the following content:\n");
+    fprintf(log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
+    BIO_dump_indent_fp(log, Ks, KEYSIZE, 4); fprintf(log, "\n");
+
+    fprintf(log, "    IDa = '%s'\n", *IDa);
+
+    // 5) Read Na2
+    bytesRead = read(fd, Na2, NONCELEN);
+    if (bytesRead != NONCELEN)
+        { fprintf(log, "Unable to read Na2\n"); return; }
+    
+    fprintf(log, "    Na2 ( %lu Bytes ) is:\n", NONCELEN);
+    BIO_dump_indent_fp(log, Na2, NONCELEN, 4); fprintf(log, "\n");
 }
 
 //-----------------------------------------------------------------------------
