@@ -44,7 +44,7 @@ int main ( int argc , char * argv[] )
     int       fd_A2B , fd_B2A   ;
     FILE     *log ;
 
-    char *developerName = "Code by STUDENTS_LAST_NAMES" ;
+    char *developerName = "Susko & Nyguen" ;
 
     fprintf( stdout , "Starting Basim's     %s\n" , developerName ) ;
 
@@ -69,7 +69,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "Starting Basim\n"  ) ;
     BANNER( log ) ;
 
-    fprintf( log , "\n<readFrom Amal> FD=%d , <sendTo Amal> FD=%d\n\n" , fd_A2B , fd_B2A );
+    fprintf( log , "\n<readFr. Amal> FD=%d , <sendTo Amal> FD=%d\n\n" , fd_A2B , fd_B2A );
 
     // Get Basim's master keys with the KDC
     myKey_t   Kb ;    // Basim's master key with the KDC    
@@ -105,7 +105,6 @@ int main ( int argc , char * argv[] )
 
     fflush( log ) ;
     
-    
     //*************************************
     // Receive  & Process   Message 3
     //*************************************
@@ -113,6 +112,7 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG3 Receive\n");
     BANNER( log ) ;
+    fflush (log );
     myKey_t Ks;
     char *IDa2;
     Nonce_t Na_msg3;
@@ -125,6 +125,22 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG4 New\n");
     BANNER( log ) ;
+    Nonce_t fNa2;
+    fNonce(fNa2, Na_msg3);
+    fprintf(log, "Basim is sending this f( Na2 ) in MSG4:\n");
+    BIO_dump_indent_fp(log, fNa2, NONCELEN, 4); fprintf(log, "\n");
+    fprintf(log, "Basim is sending this nonce Nb in MSG4:\n");
+    BIO_dump_indent_fp( log, Nb, NONCELEN, 4); fprintf(log, "\n");
+
+    uint8_t *msg4;
+    size_t LenMsg4 = MSG4_new(log, &msg4, &Ks, &fNa2, &Nb);
+
+    // Send message to Amal
+    write(fd_B2A, &LenMsg4, LENSIZE);
+    write(fd_B2A, msg4, LenMsg4);
+    fprintf(log, "Basim Sent the above MSG4 to Amal\n\n");
+    fflush(log);
+    free(msg4);
 
     //*************************************
     // Receive   & Process Message 5
@@ -133,6 +149,15 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG5 Receive\n");
     BANNER( log ) ;
+    Nonce_t fNb, rcvd_fNb;
+    fNonce(fNb, Nb);
+    fprintf(log, "Basim is expecting back this f( Nb ) in MSG5:\n");
+    BIO_dump_indent_fp(log, fNb, NONCELEN, 4); fprintf(log, "\n");
+
+    MSG5_receive(log, fd_A2B, &Ks, &rcvd_fNb);
+
+    fprintf(log, "Basim received Message 5 from Amal with this f( Nb ): >>>> %s\n", (memcmp(fNb, rcvd_fNb, NONCELEN) == 0)? "VALID" : "INVALID");
+    BIO_dump_indent_fp(log, rcvd_fNb, NONCELEN, 4); fprintf(log, "\n");
 
     //*************************************   
     // Final Clean-Up

@@ -160,7 +160,7 @@ int main ( int argc , char * argv[] )
 
     // 5) Printed Needed Output
     fprintf(log, "Amal decrypted message 2 from the KDC into the following:\n");
-    fprintf(log, "    Ks { Key, IV } (%lu Bytes ) is:\n", KEYSIZE);
+    fprintf(log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
     BIO_dump_indent_fp ( log ,  &Ks  ,  KEYSIZE  , 4 ) ;  fprintf( log , "\n") ;
     fflush(log);
 
@@ -203,35 +203,18 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG4 Receive\n");
     BANNER( log ) ;
+    Nonce_t rcvd_fNa2, fNa2, Nb;
+    MSG4_receive(log, fd_B2A, &Ks, &rcvd_fNa2, &Nb);
 
-    uint8_t *msg4;
-    Nonce_t Na2_msg4;
-    size_t lenMsg4;
-    
-    // Receive Message 4 from Basim
-    lenMsg4 = read(fd_B2A, msg4, BUFFER_SIZE);
-    
-    fprintf(log, "Amal received Message 4 ( %lu bytes ) from Basim:\n", lenMsg4);
-    BIO_dump_indent_fp(log, msg4, lenMsg4, 4); fprintf(log, "\n");
+    fNonce(fNa2, Na2);
+    fprintf(log, "Amal is expecting back this f( Na2 ) in MSG4:\n");
+    BIO_dump_indent_fp(log, fNa2, NONCELEN, 4); fprintf(log, "\n");
 
-    // Process Message 4
-    if (MSG4_process(log, msg4, &Ks, &Na2_msg4) != 0) {
-        fprintf(stderr, "\nError: Amal failed to process Message 4 from Basim.\n");
-        fprintf(log, "\nError: Amal failed to process Message 4 from Basim.\n");
-        goto end_;
-    }
-    fprintf(log, "Message 4 processed successfully. Validating Na2...\n");
+    fprintf(log, "Basim returned the following f( Na2 )   >>>> %s\n", (memcmp(fNa2, rcvd_fNa2, NONCELEN) == 0)? "VALID" : "INVALID");
+    BIO_dump_indent_fp(log, rcvd_fNa2, NONCELEN, 4); fprintf(log, "\n");
 
-    // Verify Na2
-    if (memcmp(Na2, Na2_msg4, NONCELEN) != 0) {
-        fprintf(stderr, "Error: Invalid Na2 received from Basim in Message 4.\n");
-        fprintf(log, "Error: Invalid Na2 received from Basim in Message 4.\n");
-        goto end_;
-    }
-    fprintf(log, "Na2 verified successfully as VALID.\n");
-    fflush(log);
-    free(msg4);
-
+    fprintf(log, "Amal also received this Nb :\n");
+    BIO_dump_indent_fp(log, Nb, NONCELEN, 4); fprintf(log, "\n");
 
     //*************************************
     // Construct & Send    Message 5
@@ -240,26 +223,19 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG5 New\n");
     BANNER( log ) ;
-
     uint8_t *msg5;
-    size_t lenMsg5;
+    Nonce_t fNb;
+    fNonce(fNb, Nb);
+    fprintf(log, "Amal is sending this f( Nb ) in MSG5:\n");
+    BIO_dump_indent_fp(log, fNb, NONCELEN, 4); fprintf(log, "\n");
 
-    fprintf(log, "Amal will now construct Message 5 to send to Basim.\n");
+    size_t LenMsg5 = MSG5_new(log, &msg5, &Ks, &fNb);
 
-    // Construct Message 5
-    lenMsg5 = MSG5_new(log, &msg5, &Ks, Na2_msg4); // CHECK THE NONCE (fourth param)
-
-    fprintf(log, "Amal constructed Message 5 ( %lu bytes ):\n", lenMsg5);
-    BIO_dump_indent_fp(log, msg5, lenMsg5, 4); fprintf(log, "\n");
-
-    // Send Message 5 to Basim
-    write(fd_A2B, msg5, lenMsg5);
-    fprintf(log, "Amal sent Message 5 ( %lu bytes ) to Basim.\n", lenMsg5);
-
-    // Free allocated memory
+    // Send msg5 to Basim
+    write(fd_A2B, &LenMsg5, LENSIZE);
+    write(fd_A2B, msg5, LenMsg5);
+    fprintf(log, "Amal sent Message 5 ( %lu bytes ) to Basim\n", LenMsg5);
     free(msg5);
-
-
 
     //*************************************   
     // Final Clean-Up

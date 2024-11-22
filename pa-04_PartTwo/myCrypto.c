@@ -926,7 +926,7 @@ void MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char *
     if (bytesRead != LenMsg3)
         { fprintf(log, "Unable to read tktCipher\n"); return; }
 
-    fprintf(log, "The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_reveive()\n", LenMsg3);
+    fprintf(log, "The following Encrypted TktCipher ( %lu bytes ) was received by MSG3_receive()\n", LenMsg3);
     BIO_dump_indent_fp(log, tktCipher, LenMsg3, 4); fprintf(log, "\n");
 
     // 3) Decrypt Encrypted Ticket
@@ -968,6 +968,7 @@ void MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char *
     
     fprintf(log, "    Na2 ( %lu Bytes ) is:\n", NONCELEN);
     BIO_dump_indent_fp(log, Na2, NONCELEN, 4); fprintf(log, "\n");
+    fflush (log );
 }
 
 //-----------------------------------------------------------------------------
@@ -982,43 +983,26 @@ size_t  MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 
 {
 
     size_t LenMsg4;
-    size_t plaintext_len, ciphertext_len;
+    size_t offset = 0;
 
-    // Construct MSG4 Plaintext = { f(Na2)  ||  Nb }
-    // Use the global scratch buffer plaintext[] for MSG4 plaintext and fill it in with component values
-    plaintext_len = fNa2->size + Nb->size;
-    if (plaintext_len > sizeof(plaintext)) {
-        fprintf(log, "Error: MSG4 plaintext too large for scratch buffer\n");
-        return 0;
-    }
+    // 1) Add Na2 and Nb to plainbuffer
+    memcpy(plaintext + offset, fNa2, NONCELEN);
+    offset += NONCELEN;
 
-    memcpy(plaintext, fNa2->data, fNa2->size);       // Copy f(Na2)
-    memcpy(plaintext + fNa2->size, Nb->data, Nb->size); // Concatenate Nb
-
-    // Now, encrypt MSG4 plaintext using the session key Ks;
-    ciphertext_len = encrypt_with_key(Ks, plaintext, plaintext_len, ciphertext);
-    if (ciphertext_len > sizeof(ciphertext)) {
-        fprintf(log, "Error: MSG4 ciphertext too large for scratch buffer\n");
-        return 0;
-    }
-
-    //****************CHECK THIS******************** */
-    // Use the global scratch buffer ciphertext[] to collect the result. Make sure it fits.
-
-    // Now allocate a buffer for the caller, and copy the encrypted MSG4 to it
-    // *msg4 = malloc( .... ) ;
-    *msg4 = (uint8_t *)malloc(ciphertext_len);
-    if (*msg4 == NULL) {
-        fprintf(log, "Error: Memory allocation failed for MSG4\n");
-        return 0;
-    }
-
-    memcpy(*msg4, ciphertext, ciphertext_len);
-    LenMsg4 = ciphertext_len;
+    memcpy(plaintext + offset, Nb, NONCELEN);
+    offset += NONCELEN;
+    // 2) encrypt plainbuffer
+    LenMsg4 = encrypt(plaintext, offset, Ks->key, Ks->iv, ciphertext);
+    // 3) allocate memory for msg4 and memcpy
+    *msg4 = (uint8_t *)malloc(LenMsg4);
+    if ( !msg4 )
+        { fprintf(log, "Memory Allocation failed for msg4\n"); exit(-1); }
+    uint8_t *p = *msg4;
+    memcpy(p, ciphertext, LenMsg4);
 
     fprintf( log , "The following Encrypted MSG4 ( %lu bytes ) has been"
                     " created by MSG4_new ():  \n" , LenMsg4 ) ;
-    BIO_dump_indent_fp(log, (const char *)*msg4, LenMsg4, 4);
+    BIO_dump_indent_fp(log, (const char *)*msg4, LenMsg4, 4); fprintf(log, "\n");
 
     return LenMsg4 ;
     
@@ -1031,48 +1015,31 @@ size_t  MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 
 
 void MSG4_receive(FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2, Nonce_t *Nb)
 {
-    uint8_t *encrypted_msg4 = NULL;
-    //uint8_t plaintext[SCRATCH_BUFFER_SIZE]; // ****** NEED TO: define SCRATCH_BUFFER_SIZE********
-    size_t encrypted_len, plaintext_len;
+    if ( !log )
+        { printf("MSG4_receive recieved NULL Pointers\n"); return; }
+    
+    size_t LenMsg4 = 0, bytesRead;
 
-    // step 1: read the encrypted MSG4 from fd
-    if (read_fd(fd, &encrypted_msg4, &encrypted_len) == -1) { 
-        fprintf(log, "Error: Failed to read encrypted MSG4 from fd\n");
-        return;
-    }
+    // 1) Read Length of Message
+    bytesRead = read(fd, &LenMsg4, LENSIZE);
+    if (bytesRead != LENSIZE)
+        { fprintf(log, "Unable to read size of message\n"); return; }
+    // 2) Read Encypted Message
+    bytesRead = read(fd, ciphertext, LenMsg4);
+    if (bytesRead != LenMsg4)
+        { fprintf(log, "Unable to read encrypted MSG4\n"); return; }
 
-    fprintf(log, "Received encrypted MSG4 (%lu bytes):\n", encrypted_len);
-    BIO_dump_indent_fp(log, (const char *)encrypted_msg4, encrypted_len, 4);
+    fprintf(log, "The following Encrypted MSG4 ( %lu bytes ) was received:\n", LenMsg4);
+    BIO_dump_indent_fp(log, ciphertext, LenMsg4, 4); fprintf(log, "\n\n");
+    // 3) Decrypt Message
+    size_t decryptedLen = decrypt(ciphertext, LenMsg4, Ks->key, Ks->iv, plaintext);
 
-    // step 2: decrypt the encrypted MSG4 using session key Ks
-    plaintext_len = decrypt_with_key(Ks, encrypted_msg4, encrypted_len, plaintext);
-    if (plaintext_len == 0) {
-        fprintf(log, "Error: Failed to decrypt MSG4\n");
-        free(encrypted_msg4);
-        return;
-    }
-
-    fprintf(log, "Decrypted MSG4 (%lu bytes):\n", plaintext_len);
-    BIO_dump_indent_fp(log, (const char *)plaintext, plaintext_len, 4);
-
-    // step 3: parse plaintext into rcvd_fNa2 + Nb
-    if (plaintext_len < rcvd_fNa2->size + Nb->size) {
-        fprintf(log, "Error: Decrypted MSG4 size mismatch\n");
-        free(encrypted_msg4);
-        return;
-    }
-
-    memcpy(rcvd_fNa2->data, plaintext, rcvd_fNa2->size);
-    memcpy(Nb->data, plaintext + rcvd_fNa2->size, Nb->size);
-
-    fprintf(log, "Parsed rcvd_fNa2 (size: %lu bytes):\n", rcvd_fNa2->size);
-    BIO_dump_indent_fp(log, (const char *)rcvd_fNa2->data, rcvd_fNa2->size, 4);
-
-    fprintf(log, "Parsed Nb (size: %lu bytes):\n", Nb->size);
-    BIO_dump_indent_fp(log, (const char *)Nb->data, Nb->size, 4);
-
-    // Step 4: Clean up
-    free(encrypted_msg4);
+    // 4) Parse Decrypted Message
+    size_t offset = 0;
+    memcpy(rcvd_fNa2, plaintext + offset, NONCELEN);
+    offset += NONCELEN;
+    memcpy(Nb, plaintext + offset, NONCELEN);
+    offset += NONCELEN;
 }
 
 //-----------------------------------------------------------------------------
@@ -1088,20 +1055,23 @@ size_t  MSG5_new( FILE *log , uint8_t **msg5, const myKey_t *Ks ,  Nonce_t *fNb 
 
     // Construct MSG5 Plaintext  = {  f(Nb)  }
     // Use the global scratch buffer plaintext[] for MSG5 plaintext. Make sure it fits 
-
+    memcpy(plaintext, fNb, NONCELEN);
 
     // Now, encrypt( Ks , {plaintext} );
     // Use the global scratch buffer ciphertext[] to collect result. Make sure it fits.
-
+    LenMSG5cipher = encrypt(plaintext, NONCELEN, Ks->key, Ks->iv, ciphertext);
 
     // Now allocate a buffer for the caller, and copy the encrypted MSG5 to it
-    // *msg5 = malloc( ... ) ;
+    *msg5 = (uint8_t *)malloc(LenMSG5cipher);
+    if ( !msg5 )
+        { fprintf(log, "Memory Allocation failed for msg5\n"); exit(-1); }
+    uint8_t *p = *msg5;
+    memcpy(p, ciphertext, LenMSG5cipher);
 
-
-    // fprintf( log , "The following Encrypted MSG5 ( %lu bytes ) has been"
-    //                " created by MSG5_new ():  \n" , LenMSG5cipher ) ;
-    // BIO_dump_indent_fp( log , *msg5 , LenMSG5cipher , 4 ) ;    fprintf( log , "\n" ) ;    
-    // fflush( log ) ;    
+    fprintf( log , "The following Encrypted MSG5 ( %lu bytes ) has been"
+                   " created by MSG5_new ():  \n" , LenMSG5cipher ) ;
+    BIO_dump_indent_fp( log , *msg5 , LenMSG5cipher , 4 ) ;    fprintf( log , "\n" ) ;    
+    fflush( log ) ;    
 
     return LenMSG5cipher ;
 
@@ -1114,26 +1084,25 @@ size_t  MSG5_new( FILE *log , uint8_t **msg5, const myKey_t *Ks ,  Nonce_t *fNb 
 void  MSG5_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *fNb )
 {
 
-    size_t    LenMSG5cipher ;
+    size_t    LenMSG5cipher, bytesRead ;
     
     // Read Len( Msg5 ) followed by reading Msg5 itself
-    // Always make sure read() and write() succeed
-    // Use the global scratch buffer ciphertext[] to receive encrypted MSG5.
-    // Make sure it fits.
-
+    bytesRead = read(fd, &LenMSG5cipher, LENSIZE);
+    if (bytesRead != LENSIZE)
+        { fprintf(log, "Unable to read size of message\n"); return; }
+    bytesRead = read(fd, ciphertext, LenMSG5cipher);
+    if (bytesRead != LenMSG5cipher)
+        { fprintf(log, "Unable to read encrypted MSG5\n"); return; }
 
     fprintf( log ,"The following Encrypted MSG5 ( %lu bytes ) has been received:\n" , LenMSG5cipher );
-
+    BIO_dump_indent_fp(log, ciphertext, LenMSG5cipher, 4); fprintf(log, "\n");
 
     // Now, Decrypt MSG5 using Ks
     // Use the global scratch buffer decryptext[] to collect the results of decryption
-    // Make sure it fits
-
+    size_t decryptedLen = decrypt(ciphertext, LenMSG5cipher, Ks->key, Ks->iv, decryptext);
 
     // Parse MSG5 into its components f( Nb )
-
-
-
+    memcpy(fNb, decryptext, decryptedLen);
 }
 
 //-----------------------------------------------------------------------------
@@ -1141,8 +1110,21 @@ void  MSG5_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *fNb )
 // For our purposes, F( n ) = ( n + 1 ) mod  2^b  
 // where b = number of bits in a Nonce_t object
 // The value of the nonces are interpretted as BIG-Endian unsigned integers
-void     fNonce( Nonce_t r , Nonce_t n )
-{
-    // Note that the nonces are store in Big-Endian byte order
-    // This affects how you do arithmetice on the noces, e.g. when you add 1
+void fNonce(Nonce_t r, Nonce_t n) {
+    uint8_t carry = 1;
+    uint8_t temp[NONCELEN];
+    // Copy input nonce to temp
+    memcpy(temp, n, NONCELEN);
+
+    // Perform big-endian addition within the correct bounds
+    for (int i = NONCELEN - 1; i >= 0; i--) {
+        uint16_t sum = temp[i] + carry;
+        temp[i] = sum & 0xFF;  // Update byte
+        carry = sum >> 8;      // Carry over the overflow
+    }
+    // Copy the result to the output nonce
+    memcpy(r, temp, NONCELEN);
 }
+
+
+
