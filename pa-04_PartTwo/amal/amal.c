@@ -204,6 +204,35 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG4 Receive\n");
     BANNER( log ) ;
 
+    uint8_t *msg4;
+    Nonce_t Na2_msg4;
+    size_t lenMsg4;
+    
+    // Receive Message 4 from Basim
+    lenMsg4 = read(fd_B2A, msg4, BUFFER_SIZE);
+    
+    fprintf(log, "Amal received Message 4 ( %lu bytes ) from Basim:\n", lenMsg4);
+    BIO_dump_indent_fp(log, msg4, lenMsg4, 4); fprintf(log, "\n");
+
+    // Process Message 4
+    if (MSG4_process(log, msg4, &Ks, &Na2_msg4) != 0) {
+        fprintf(stderr, "\nError: Amal failed to process Message 4 from Basim.\n");
+        fprintf(log, "\nError: Amal failed to process Message 4 from Basim.\n");
+        goto end_;
+    }
+    fprintf(log, "Message 4 processed successfully. Validating Na2...\n");
+
+    // Verify Na2
+    if (memcmp(Na2, Na2_msg4, NONCELEN) != 0) {
+        fprintf(stderr, "Error: Invalid Na2 received from Basim in Message 4.\n");
+        fprintf(log, "Error: Invalid Na2 received from Basim in Message 4.\n");
+        goto end_;
+    }
+    fprintf(log, "Na2 verified successfully as VALID.\n");
+    fflush(log);
+    free(msg4);
+
+
     //*************************************
     // Construct & Send    Message 5
     //*************************************
@@ -211,6 +240,25 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG5 New\n");
     BANNER( log ) ;
+
+    uint8_t *msg5;
+    size_t lenMsg5;
+
+    fprintf(log, "Amal will now construct Message 5 to send to Basim.\n");
+
+    // Construct Message 5
+    lenMsg5 = MSG5_new(log, &msg5, &Ks, Na2_msg4); // CHECK THE NONCE (fourth param)
+
+    fprintf(log, "Amal constructed Message 5 ( %lu bytes ):\n", lenMsg5);
+    BIO_dump_indent_fp(log, msg5, lenMsg5, 4); fprintf(log, "\n");
+
+    // Send Message 5 to Basim
+    write(fd_A2B, msg5, lenMsg5);
+    fprintf(log, "Amal sent Message 5 ( %lu bytes ) to Basim.\n", lenMsg5);
+
+    // Free allocated memory
+    free(msg5);
+
 
 
     //*************************************   
